@@ -145,13 +145,13 @@ export default function Dashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "recording":
-        return "bg-red-500"
+        return "bg-red-500 shadow-red-500/20 shadow-lg"
       case "online":
-        return "bg-green-500"
+        return "bg-green-500 shadow-green-500/20 shadow-lg"
       case "offline":
-        return "bg-gray-500"
+        return "bg-gray-500 shadow-gray-500/20 shadow-lg"
       default:
-        return "bg-gray-500"
+        return "bg-gray-500 shadow-gray-500/20 shadow-lg"
     }
   }
 
@@ -200,13 +200,19 @@ export default function Dashboard() {
         {/* Camera Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
           {cameras.map((camera) => (
-            <Card key={camera.id} className="relative overflow-hidden">
+            <Card
+              key={camera.id}
+              className="relative overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-shadow"
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium">{camera.name}</CardTitle>
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${getStatusColor(camera.status)}`} />
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs font-semibold bg-primary/10 text-primary border-primary/20"
+                    >
                       {camera.detections}
                     </Badge>
                   </div>

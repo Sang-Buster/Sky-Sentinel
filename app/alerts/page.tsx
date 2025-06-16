@@ -348,30 +348,30 @@ function AlertCard({
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "critical":
-        return "border-red-500 bg-red-500/5"
+        return "border-red-400 bg-red-500/10"
       case "high":
-        return "border-orange-500 bg-orange-500/5"
+        return "border-orange-400 bg-orange-500/10"
       case "medium":
-        return "border-yellow-500 bg-yellow-500/5"
+        return "border-yellow-400 bg-yellow-500/10"
       case "low":
-        return "border-blue-500 bg-blue-500/5"
+        return "border-blue-400 bg-blue-500/10"
       default:
-        return "border-gray-500 bg-gray-500/5"
+        return "border-gray-400 bg-gray-500/10"
     }
   }
 
   const getSeverityBadgeColor = (severity: string) => {
     switch (severity) {
       case "critical":
-        return "bg-red-500"
+        return "bg-red-500 hover:bg-red-600"
       case "high":
-        return "bg-orange-500"
+        return "bg-orange-500 hover:bg-orange-600"
       case "medium":
-        return "bg-yellow-500"
+        return "bg-yellow-500 hover:bg-yellow-600"
       case "low":
-        return "bg-blue-500"
+        return "bg-blue-500 hover:bg-blue-600"
       default:
-        return "bg-gray-500"
+        return "bg-gray-500 hover:bg-gray-600"
     }
   }
 

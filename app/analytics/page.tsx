@@ -197,9 +197,9 @@ export default function AnalyticsHub() {
   }, [])
 
   const getAltitudeColor = (altitude: number) => {
-    if (altitude < 1000) return "text-red-500"
-    if (altitude < 3000) return "text-yellow-500"
-    return "text-green-500"
+    if (altitude < 1000) return "text-red-400 font-semibold"
+    if (altitude < 3000) return "text-yellow-400 font-semibold"
+    return "text-green-400 font-semibold"
   }
 
   const getWindDirection = (degrees: number) => {
@@ -337,22 +337,22 @@ export default function AnalyticsHub() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
-                    <Thermometer className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                    <Thermometer className="h-8 w-8 mx-auto mb-2 text-blue-400" />
                     <div className="text-2xl font-bold">{weatherData.temperature_c}°C</div>
                     <div className="text-sm text-muted-foreground">Temperature</div>
                   </div>
                   <div className="text-center">
-                    <Gauge className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <Gauge className="h-8 w-8 mx-auto mb-2 text-green-400" />
                     <div className="text-2xl font-bold">{weatherData.pressure_hpa}</div>
                     <div className="text-sm text-muted-foreground">hPa</div>
                   </div>
                   <div className="text-center">
-                    <Wind className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                    <Wind className="h-8 w-8 mx-auto mb-2 text-yellow-400" />
                     <div className="text-2xl font-bold">{weatherData.wind_speed_kt}</div>
                     <div className="text-sm text-muted-foreground">kt @ {weatherData.wind_direction}°</div>
                   </div>
                   <div className="text-center">
-                    <Eye className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                    <Eye className="h-8 w-8 mx-auto mb-2 text-purple-400" />
                     <div className="text-2xl font-bold">{weatherData.visibility_km}</div>
                     <div className="text-sm text-muted-foreground">km visibility</div>
                   </div>
@@ -430,10 +430,10 @@ export default function AnalyticsHub() {
                       {filteredAircraftData.map((aircraft) => (
                         <div
                           key={aircraft.id}
-                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedAircraft === aircraft.id
-                              ? "border-primary bg-primary/5"
-                              : "border-border/20 hover:bg-muted/50"
+                              ? "border-primary bg-primary/10 shadow-md"
+                              : "border-border/40 hover:bg-muted/50 hover:border-border/60"
                           }`}
                           onClick={() => setSelectedAircraft(aircraft.id)}
                         >

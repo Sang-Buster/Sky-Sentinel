@@ -168,7 +168,7 @@ export default function AISearch() {
             {chatMessages.map((message) => (
               <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-3xl ${message.type === "user" ? "bg-primary text-primary-foreground" : "bg-muted"} rounded-lg p-4`}
+                  className={`max-w-3xl ${message.type === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50 border border-border/30"} rounded-lg p-4 shadow-sm`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     {message.type === "assistant" && <Sparkles className="h-4 w-4 text-purple-500" />}
@@ -180,7 +180,10 @@ export default function AISearch() {
                   {message.results && (
                     <div className="space-y-3 mt-4">
                       {message.results.map((result) => (
-                        <Card key={result.id} className="bg-background">
+                        <Card
+                          key={result.id}
+                          className="bg-background border-border/50 hover:border-border/70 transition-all duration-200"
+                        >
                           <CardContent className="p-4">
                             <div className="flex gap-4">
                               <div className="relative">
@@ -265,7 +268,7 @@ export default function AISearch() {
                     key={index}
                     variant="outline"
                     size="sm"
-                    className="justify-start text-left h-auto p-3"
+                    className="justify-start text-left h-auto p-3 hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
                     onClick={() => handleSuggestedQuery(suggestedQuery)}
                   >
                     <Search className="h-3 w-3 mr-2 flex-shrink-0" />

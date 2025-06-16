@@ -99,13 +99,13 @@ export default function SystemSettings() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "online":
-        return "text-green-500 border-green-500"
+        return "text-green-400 border-green-400 bg-green-500/10"
       case "offline":
-        return "text-gray-500 border-gray-500"
+        return "text-gray-400 border-gray-400 bg-gray-500/10"
       case "error":
-        return "text-red-500 border-red-500"
+        return "text-red-400 border-red-400 bg-red-500/10"
       default:
-        return "text-gray-500 border-gray-500"
+        return "text-gray-400 border-gray-400 bg-gray-500/10"
     }
   }
 
@@ -147,7 +147,7 @@ export default function SystemSettings() {
 
               <div className="grid gap-6">
                 {cameras.map((camera) => (
-                  <Card key={camera.id}>
+                  <Card key={camera.id} className="border-border/50 hover:border-border/70 transition-all duration-200">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -255,7 +255,12 @@ export default function SystemSettings() {
                       </div>
 
                       <div className="flex gap-2 pt-4 border-t">
-                        <Button size="sm" variant="outline" onClick={() => testCameraConnection(camera.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => testCameraConnection(camera.id)}
+                          className="hover:bg-blue-500 hover:text-white transition-colors"
+                        >
                           <TestTube className="h-4 w-4 mr-2" />
                           Test Connection
                         </Button>

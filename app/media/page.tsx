@@ -149,13 +149,13 @@ export default function MediaLibrary() {
   const getDetectionColor = (type: string) => {
     switch (type) {
       case "aircraft":
-        return "bg-blue-500"
+        return "bg-blue-500 hover:bg-blue-600"
       case "drone":
-        return "bg-red-500"
+        return "bg-red-500 hover:bg-red-600"
       case "bird":
-        return "bg-green-500"
+        return "bg-green-500 hover:bg-green-600"
       default:
-        return "bg-gray-500"
+        return "bg-gray-500 hover:bg-gray-600"
     }
   }
 
@@ -166,9 +166,28 @@ export default function MediaLibrary() {
     <SidebarInset>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4">
         <SidebarTrigger className="-ml-1" />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <h1 className="text-lg font-semibold">Media Library</h1>
           <Badge variant="outline">{sortedItems.length} items</Badge>
+        </div>
+
+        {/* Storage Status Indicator */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>NAS Storage:</span>
+            <div className="flex items-center gap-2">
+              <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-green-500 to-yellow-500 rounded-full"
+                  style={{ width: "68%" }}
+                ></div>
+              </div>
+              <span className="text-xs font-medium">68%</span>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            2.1TB / 3.0TB
+          </Badge>
         </div>
       </header>
 
@@ -301,18 +320,18 @@ function MediaCard({ item }: { item: MediaItem }) {
   const getDetectionColor = (type: string) => {
     switch (type) {
       case "aircraft":
-        return "bg-blue-500"
+        return "bg-blue-500 hover:bg-blue-600"
       case "drone":
-        return "bg-red-500"
+        return "bg-red-500 hover:bg-red-600"
       case "bird":
-        return "bg-green-500"
+        return "bg-green-500 hover:bg-green-600"
       default:
-        return "bg-gray-500"
+        return "bg-gray-500 hover:bg-gray-600"
     }
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border-border/50 hover:shadow-lg transition-all duration-200 hover:border-border/70">
       <div className="relative aspect-video">
         <img src={item.thumbnail || "/placeholder.svg"} alt={item.filename} className="w-full h-full object-cover" />
         <div className="absolute top-2 left-2">
@@ -360,7 +379,11 @@ function MediaCard({ item }: { item: MediaItem }) {
             </Badge>
           </div>
           <div className="flex gap-2 pt-2">
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
               <Play className="h-3 w-3 mr-1" />
               View
             </Button>
