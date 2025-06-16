@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Video, ImageIcon, Download, Play, Filter, Search, Plane, Activity } from "lucide-react"
+import { Video, ImageIcon, Download, Play, Filter, Search, Plane, Activity, Loader2 } from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 
 interface MediaItem {
@@ -24,83 +24,50 @@ interface MediaItem {
   thumbnail: string
 }
 
-const mockMediaItems: MediaItem[] = [
-  {
-    id: "media-001",
-    type: "video",
-    filename: "aircraft_detection_20240115_143215.mp4",
-    cameraId: "cam-001",
-    cameraName: "North Perimeter",
-    timestamp: "2024-01-15T14:32:15Z",
-    duration: 12,
-    size: "24.5 MB",
-    detectionType: "aircraft",
-    confidence: 0.94,
-    thumbnail: "/placeholder.svg?height=120&width=160",
-  },
-  {
-    id: "media-002",
-    type: "image",
-    filename: "drone_snapshot_20240115_143145.jpg",
-    cameraId: "cam-003",
-    cameraName: "East Taxiway",
-    timestamp: "2024-01-15T14:31:45Z",
-    size: "2.1 MB",
-    detectionType: "drone",
-    confidence: 0.87,
-    thumbnail: "/placeholder.svg?height=120&width=160",
-  },
-  {
-    id: "media-003",
-    type: "video",
-    filename: "aircraft_landing_20240115_142830.mp4",
-    cameraId: "cam-002",
-    cameraName: "South Tower",
-    timestamp: "2024-01-15T14:28:30Z",
-    duration: 18,
-    size: "36.2 MB",
-    detectionType: "aircraft",
-    confidence: 0.96,
-    thumbnail: "/placeholder.svg?height=120&width=160",
-  },
-  {
-    id: "media-004",
-    type: "image",
-    filename: "bird_detection_20240115_141205.jpg",
-    cameraId: "cam-004",
-    cameraName: "West Hangar",
-    timestamp: "2024-01-15T14:12:05Z",
-    size: "1.8 MB",
-    detectionType: "bird",
-    confidence: 0.73,
-    thumbnail: "/placeholder.svg?height=120&width=160",
-  },
-  {
-    id: "media-005",
-    type: "video",
-    filename: "drone_approach_20240115_140945.mp4",
-    cameraId: "cam-005",
-    cameraName: "Cargo Ramp",
-    timestamp: "2024-01-15T14:09:45Z",
-    duration: 8,
-    size: "16.8 MB",
-    detectionType: "drone",
-    confidence: 0.91,
-    thumbnail: "/placeholder.svg?height=120&width=160",
-  },
-  {
-    id: "media-006",
-    type: "image",
-    filename: "aircraft_taxi_20240115_135520.jpg",
-    cameraId: "cam-006",
-    cameraName: "Terminal Gate",
-    timestamp: "2024-01-15T13:55:20Z",
-    size: "2.3 MB",
-    detectionType: "aircraft",
-    confidence: 0.89,
-    thumbnail: "/placeholder.svg?height=120&width=160",
-  },
-]
+// Generate more mock data for infinite scroll demonstration
+const generateMockMediaItems = (startIndex: number, count: number): MediaItem[] => {
+  const cameras = [
+    { id: "cam-001", name: "North Perimeter" },
+    { id: "cam-002", name: "South Tower" },
+    { id: "cam-003", name: "East Taxiway" },
+    { id: "cam-004", name: "West Hangar" },
+    { id: "cam-005", name: "Cargo Ramp" },
+    { id: "cam-006", name: "Terminal Gate" },
+    { id: "cam-007", name: "Fuel Farm" },
+    { id: "cam-008", name: "Emergency Access" },
+  ]
+
+  const detectionTypes: ("aircraft" | "drone" | "bird" | "unknown")[] = ["aircraft", "drone", "bird", "unknown"]
+  const fileTypes: ("video" | "image")[] = ["video", "image"]
+
+  return Array.from({ length: count }, (_, i) => {
+    const index = startIndex + i
+    const camera = cameras[index % cameras.length]
+    const detectionType = detectionTypes[index % detectionTypes.length]
+    const fileType = fileTypes[index % fileTypes.length]
+    const date = new Date(Date.now() - index * 1000 * 60 * 15) // 15 minutes apart
+
+    return {
+      id: `media-${String(index + 1).padStart(3, "0")}`,
+      type: fileType,
+      filename: `${detectionType}_${fileType === "video" ? "detection" : "snapshot"}_${date.toISOString().replace(/[:.]/g, "").slice(0, 15)}.${fileType === "video" ? "mp4" : "jpg"}`,
+      cameraId: camera.id,
+      cameraName: camera.name,
+      timestamp: date.toISOString(),
+      duration: fileType === "video" ? Math.floor(Math.random() * 30) + 5 : undefined,
+      size:
+        fileType === "video"
+          ? `${(Math.random() * 50 + 10).toFixed(1)} MB`
+          : `${(Math.random() * 3 + 1).toFixed(1)} MB`,
+      detectionType,
+      confidence: Math.random() * 0.4 + 0.6, // 0.6 to 1.0
+      thumbnail: "/placeholder.svg?height=120&width=160",
+    }
+  })
+}
+
+const ITEMS_PER_PAGE = 12
+const MAX_TOTAL_ITEMS = 100 // Set your desired maximum here
 
 export default function MediaLibrary() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -109,7 +76,69 @@ export default function MediaLibrary() {
   const [selectedDetection, setSelectedDetection] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("newest")
 
-  const filteredItems = mockMediaItems.filter((item) => {
+  // Infinite scroll state
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(0)
+
+  // Load initial data
+  useEffect(() => {
+    const initialItems = generateMockMediaItems(0, ITEMS_PER_PAGE)
+    setMediaItems(initialItems)
+    setPage(1)
+  }, [])
+
+  // Load more items
+  const loadMoreItems = useCallback(async () => {
+    if (loading || !hasMore) return
+
+    setLoading(true)
+
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    const currentTotal = mediaItems.length
+    const remainingItems = MAX_TOTAL_ITEMS - currentTotal
+    const itemsToLoad = Math.min(ITEMS_PER_PAGE, remainingItems)
+
+    if (itemsToLoad <= 0) {
+      setHasMore(false)
+      setLoading(false)
+      return
+    }
+
+    const newItems = generateMockMediaItems(page * ITEMS_PER_PAGE, itemsToLoad)
+
+    if (newItems.length < ITEMS_PER_PAGE || currentTotal + newItems.length >= MAX_TOTAL_ITEMS) {
+      setHasMore(false)
+    }
+
+    setMediaItems((prev) => [...prev, ...newItems])
+    setPage((prev) => prev + 1)
+    setLoading(false)
+  }, [loading, hasMore, page, mediaItems.length])
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
+        loadMoreItems()
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [loadMoreItems])
+
+  // Reset when filters change
+  useEffect(() => {
+    setMediaItems(generateMockMediaItems(0, ITEMS_PER_PAGE))
+    setPage(1)
+    setHasMore(true)
+  }, [selectedCamera, selectedType, selectedDetection, sortBy, searchTerm])
+
+  const filteredItems = mediaItems.filter((item) => {
     const matchesSearch =
       item.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.cameraName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -168,7 +197,7 @@ export default function MediaLibrary() {
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2 flex-1">
           <h1 className="text-lg font-semibold">Media Library</h1>
-          <Badge variant="outline">{sortedItems.length} items</Badge>
+          <Badge variant="outline">{sortedItems.length}+ items</Badge>
         </div>
 
         {/* Storage Status Indicator */}
@@ -226,6 +255,8 @@ export default function MediaLibrary() {
                   <SelectItem value="cam-004">West Hangar</SelectItem>
                   <SelectItem value="cam-005">Cargo Ramp</SelectItem>
                   <SelectItem value="cam-006">Terminal Gate</SelectItem>
+                  <SelectItem value="cam-007">Fuel Farm</SelectItem>
+                  <SelectItem value="cam-008">Emergency Access</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -271,9 +302,9 @@ export default function MediaLibrary() {
         {/* Media Tabs */}
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All Media ({sortedItems.length})</TabsTrigger>
-            <TabsTrigger value="videos">Videos ({videoItems.length})</TabsTrigger>
-            <TabsTrigger value="images">Images ({imageItems.length})</TabsTrigger>
+            <TabsTrigger value="all">All Media ({sortedItems.length}+)</TabsTrigger>
+            <TabsTrigger value="videos">Videos ({videoItems.length}+)</TabsTrigger>
+            <TabsTrigger value="images">Images ({imageItems.length}+)</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
@@ -282,6 +313,15 @@ export default function MediaLibrary() {
                 <MediaCard key={item.id} item={item} />
               ))}
             </div>
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span className="text-muted-foreground">Loading more items...</span>
+              </div>
+            )}
+            {!hasMore && sortedItems.length > 0 && (
+              <div className="text-center py-8 text-muted-foreground">No more items to load</div>
+            )}
           </TabsContent>
 
           <TabsContent value="videos" className="mt-6">

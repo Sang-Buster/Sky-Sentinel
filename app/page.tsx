@@ -4,8 +4,21 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Camera, Activity, AlertTriangle, Play, Pause, Maximize, Volume2, VolumeX, Plane, Cloud } from "lucide-react"
+import {
+  Camera,
+  Activity,
+  AlertTriangle,
+  Play,
+  Pause,
+  Maximize,
+  Volume2,
+  VolumeX,
+  Plane,
+  Cloud,
+  ArrowRight,
+} from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import Link from "next/link"
 
 interface CameraFeed {
   id: string
@@ -101,6 +114,7 @@ const mockCameras: CameraFeed[] = [
   },
 ]
 
+// Expanded mock detections for recent activity
 const mockDetections: Detection[] = [
   {
     id: "det-001",
@@ -117,6 +131,54 @@ const mockDetections: Detection[] = [
     confidence: 0.87,
     timestamp: "2024-01-15T14:31:45Z",
     bbox: { x: 300, y: 150, width: 60, height: 40 },
+  },
+  {
+    id: "det-003",
+    cameraId: "cam-002",
+    type: "aircraft",
+    confidence: 0.96,
+    timestamp: "2024-01-15T14:28:30Z",
+    bbox: { x: 80, y: 120, width: 180, height: 100 },
+  },
+  {
+    id: "det-004",
+    cameraId: "cam-005",
+    type: "drone",
+    confidence: 0.91,
+    timestamp: "2024-01-15T14:25:12Z",
+    bbox: { x: 250, y: 180, width: 50, height: 35 },
+  },
+  {
+    id: "det-005",
+    cameraId: "cam-004",
+    type: "bird",
+    confidence: 0.73,
+    timestamp: "2024-01-15T14:22:08Z",
+    bbox: { x: 400, y: 200, width: 30, height: 25 },
+  },
+  {
+    id: "det-006",
+    cameraId: "cam-006",
+    type: "aircraft",
+    confidence: 0.89,
+    timestamp: "2024-01-15T14:18:45Z",
+    bbox: { x: 150, y: 90, width: 220, height: 130 },
+  },
+  {
+    id: "det-007",
+    cameraId: "cam-007",
+    type: "unknown",
+    confidence: 0.65,
+    timestamp: "2024-01-15T14:15:22Z",
+    bbox: { x: 320, y: 160, width: 40, height: 30 },
+  },
+  {
+    id: "det-008",
+    cameraId: "cam-001",
+    type: "drone",
+    confidence: 0.82,
+    timestamp: "2024-01-15T14:12:33Z",
+    bbox: { x: 180, y: 140, width: 55, height: 38 },
   },
 ]
 
@@ -173,6 +235,11 @@ export default function Dashboard() {
   const toggleMute = (cameraId: string) => {
     setIsMuted((prev) => ({ ...prev, [cameraId]: !prev[cameraId] }))
   }
+
+  // Sort detections by timestamp (most recent first) and show top 6
+  const sortedRecentDetections = recentDetections
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 6)
 
   return (
     <SidebarInset>
@@ -236,6 +303,7 @@ export default function Dashboard() {
                   {/* Detection Overlay */}
                   {recentDetections
                     .filter((det) => det.cameraId === camera.id)
+                    .slice(0, 1) // Show only the most recent detection per camera
                     .map((detection) => (
                       <div
                         key={detection.id}
@@ -298,19 +366,27 @@ export default function Dashboard() {
         {/* Recent Detections */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Recent Detections
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Recent Detections
+              </CardTitle>
+              <Link href="/media">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  View More
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentDetections.map((detection) => {
+              {sortedRecentDetections.map((detection) => {
                 const camera = cameras.find((c) => c.id === detection.cameraId)
                 return (
                   <div
                     key={detection.id}
-                    className="flex items-center justify-between p-3 border border-border/20 rounded-lg"
+                    className="flex items-center justify-between p-3 border border-border/20 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">

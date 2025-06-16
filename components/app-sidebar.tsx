@@ -103,8 +103,8 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.description}>
                     <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1 truncate">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -119,9 +119,9 @@ export function AppSidebar() {
             <SidebarMenu>
               {statusItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton>
-                    <item.icon className="h-4 w-4" />
-                    <span className="flex-1">{item.title}</span>
+                  <SidebarMenuButton className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 truncate">{item.title}</span>
                     <span className={`text-xs ${item.color}`}>{item.status}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
