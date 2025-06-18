@@ -309,7 +309,7 @@ export default function AISearch() {
         {/* Search Input */}
         <div className="p-4 border-t border-border/40">
           <div className="max-w-4xl mx-auto">
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-start">
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
@@ -322,7 +322,7 @@ export default function AISearch() {
                       handleSearch()
                     }
                   }}
-                  className="w-full min-h-[48px] max-h-[120px] resize-none rounded-md border border-input bg-background px-3 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full h-12 min-h-[48px] max-h-[120px] resize-none rounded-md border border-input bg-background px-3 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   style={{
                     lineHeight: "1.4",
                   }}
