@@ -1,12 +1,18 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertTriangle,
   Bell,
@@ -19,102 +25,102 @@ import {
   XCircle,
   Eye,
   Settings,
-  DrillIcon as Drone,
   Bird,
   HelpCircle,
-} from "lucide-react"
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
-import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
+} from 'lucide-react';
+const Drone = () => <img src="/drone.svg" alt="Drone icon" />;
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { useAutoHideHeader } from '@/hooks/use-auto-hide-header';
 
 interface Alert {
-  id: string
-  type: "detection" | "system" | "security" | "weather"
-  severity: "low" | "medium" | "high" | "critical"
-  title: string
-  description: string
-  timestamp: string
-  cameraId?: string
-  cameraName?: string
-  acknowledged: boolean
-  resolved: boolean
-  detectionType?: "aircraft" | "drone" | "bird" | "unknown"
-  confidence?: number
+  id: string;
+  type: 'detection' | 'system' | 'security' | 'weather';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description: string;
+  timestamp: string;
+  cameraId?: string;
+  cameraName?: string;
+  acknowledged: boolean;
+  resolved: boolean;
+  detectionType?: 'aircraft' | 'drone' | 'bird' | 'unknown';
+  confidence?: number;
 }
 
 const mockAlerts: Alert[] = [
   {
-    id: "alert-001",
-    type: "detection",
-    severity: "high",
-    title: "Unauthorized Drone Detected",
-    description: "Small quadcopter detected in restricted airspace near East Taxiway",
-    timestamp: "2024-01-15T14:35:22Z",
-    cameraId: "cam-003",
-    cameraName: "East Taxiway",
+    id: 'alert-001',
+    type: 'detection',
+    severity: 'high',
+    title: 'Unauthorized Drone Detected',
+    description: 'Small quadcopter detected in restricted airspace near East Taxiway',
+    timestamp: '2024-01-15T14:35:22Z',
+    cameraId: 'cam-003',
+    cameraName: 'East Taxiway',
     acknowledged: false,
     resolved: false,
-    detectionType: "drone",
+    detectionType: 'drone',
     confidence: 0.91,
   },
   {
-    id: "alert-002",
-    type: "system",
-    severity: "medium",
-    title: "Camera Connection Unstable",
-    description: "Intermittent connection issues with West Hangar camera",
-    timestamp: "2024-01-15T14:32:15Z",
-    cameraId: "cam-004",
-    cameraName: "West Hangar",
+    id: 'alert-002',
+    type: 'system',
+    severity: 'medium',
+    title: 'Camera Connection Unstable',
+    description: 'Intermittent connection issues with West Hangar camera',
+    timestamp: '2024-01-15T14:32:15Z',
+    cameraId: 'cam-004',
+    cameraName: 'West Hangar',
     acknowledged: true,
     resolved: false,
   },
   {
-    id: "alert-003",
-    type: "detection",
-    severity: "low",
-    title: "Bird Activity Detected",
-    description: "Large bird flock detected near runway approach zone",
-    timestamp: "2024-01-15T14:28:45Z",
-    cameraId: "cam-001",
-    cameraName: "North Perimeter",
+    id: 'alert-003',
+    type: 'detection',
+    severity: 'low',
+    title: 'Bird Activity Detected',
+    description: 'Large bird flock detected near runway approach zone',
+    timestamp: '2024-01-15T14:28:45Z',
+    cameraId: 'cam-001',
+    cameraName: 'North Perimeter',
     acknowledged: true,
     resolved: true,
-    detectionType: "bird",
+    detectionType: 'bird',
     confidence: 0.78,
   },
   {
-    id: "alert-004",
-    type: "security",
-    severity: "critical",
-    title: "Perimeter Breach",
-    description: "Unidentified object detected crossing security perimeter",
-    timestamp: "2024-01-15T14:25:30Z",
-    cameraId: "cam-007",
-    cameraName: "Fuel Farm",
+    id: 'alert-004',
+    type: 'security',
+    severity: 'critical',
+    title: 'Perimeter Breach',
+    description: 'Unidentified object detected crossing security perimeter',
+    timestamp: '2024-01-15T14:25:30Z',
+    cameraId: 'cam-007',
+    cameraName: 'Fuel Farm',
     acknowledged: false,
     resolved: false,
-    detectionType: "unknown",
+    detectionType: 'unknown',
     confidence: 0.85,
   },
   {
-    id: "alert-005",
-    type: "weather",
-    severity: "medium",
-    title: "Visibility Reduced",
-    description: "Weather conditions affecting camera visibility",
-    timestamp: "2024-01-15T14:20:10Z",
+    id: 'alert-005',
+    type: 'weather',
+    severity: 'medium',
+    title: 'Visibility Reduced',
+    description: 'Weather conditions affecting camera visibility',
+    timestamp: '2024-01-15T14:20:10Z',
     acknowledged: true,
     resolved: false,
   },
-]
+];
 
 export default function AlertsPanel() {
-  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
-  const [selectedSeverity, setSelectedSeverity] = useState<string>("all")
-  const [activeTab, setActiveTab] = useState<string>("active")
-  const [showUnacknowledgedOnly, setShowUnacknowledgedOnly] = useState(false)
-  const isHeaderVisible = useAutoHideHeader()
+  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>('active');
+  const [showUnacknowledgedOnly, setShowUnacknowledgedOnly] = useState(false);
+  const isHeaderVisible = useAutoHideHeader();
 
   useEffect(() => {
     // Simulate new alerts
@@ -122,159 +128,163 @@ export default function AlertsPanel() {
       if (Math.random() > 0.8) {
         const newAlert: Alert = {
           id: `alert-${Date.now()}`,
-          type: "detection",
-          severity: Math.random() > 0.7 ? "high" : "medium",
-          title: "New Detection Alert",
-          description: "Aircraft detected in monitoring zone",
+          type: 'detection',
+          severity: Math.random() > 0.7 ? 'high' : 'medium',
+          title: 'New Detection Alert',
+          description: 'Aircraft detected in monitoring zone',
           timestamp: new Date().toISOString(),
           cameraId: `cam-00${Math.floor(Math.random() * 8) + 1}`,
-          cameraName: "Live Camera",
+          cameraName: 'Live Camera',
           acknowledged: false,
           resolved: false,
-          detectionType: "aircraft",
+          detectionType: 'aircraft',
           confidence: 0.85 + Math.random() * 0.15,
-        }
-        setAlerts((prev) => [newAlert, ...prev])
+        };
+        setAlerts((prev) => [newAlert, ...prev]);
       }
-    }, 10000)
+    }, 10000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "critical":
-        return "bg-red-500"
-      case "high":
-        return "bg-orange-500"
-      case "medium":
-        return "bg-yellow-500"
-      case "low":
-        return "bg-blue-500"
+      case 'critical':
+        return 'bg-red-500';
+      case 'high':
+        return 'bg-orange-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'low':
+        return 'bg-blue-500';
       default:
-        return "bg-gray-500"
+        return 'bg-gray-500';
     }
-  }
+  };
 
   const getSeverityTextColor = (severity: string) => {
     switch (severity) {
-      case "critical":
-        return "text-red-500 border-red-500"
-      case "high":
-        return "text-orange-500 border-orange-500"
-      case "medium":
-        return "text-yellow-500 border-yellow-500"
-      case "low":
-        return "text-blue-500 border-blue-500"
+      case 'critical':
+        return 'text-red-500 border-red-500';
+      case 'high':
+        return 'text-orange-500 border-orange-500';
+      case 'medium':
+        return 'text-yellow-500 border-yellow-500';
+      case 'low':
+        return 'text-blue-500 border-blue-500';
       default:
-        return "text-gray-500 border-gray-500"
+        return 'text-gray-500 border-gray-500';
     }
-  }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "detection":
-        return <Eye className="h-4 w-4" />
-      case "system":
-        return <Settings className="h-4 w-4" />
-      case "security":
-        return <AlertTriangle className="h-4 w-4" />
-      case "weather":
-        return <Activity className="h-4 w-4" />
+      case 'detection':
+        return <Eye className="h-4 w-4" />;
+      case 'system':
+        return <Settings className="h-4 w-4" />;
+      case 'security':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'weather':
+        return <Activity className="h-4 w-4" />;
       default:
-        return <Bell className="h-4 w-4" />
+        return <Bell className="h-4 w-4" />;
     }
-  }
+  };
 
   const getDetectionIcon = (type?: string) => {
     switch (type) {
-      case "aircraft":
-        return <Plane className="h-4 w-4" />
-      case "drone":
-        return <Drone className="h-4 w-4" />
-      case "bird":
-        return <Bird className="h-4 w-4" />
-      case "unknown":
-        return <HelpCircle className="h-4 w-4" />
+      case 'aircraft':
+        return <Plane className="h-4 w-4" />;
+      case 'drone':
+        return <Drone className="h-4 w-4" />;
+      case 'bird':
+        return <Bird className="h-4 w-4" />;
+      case 'unknown':
+        return <HelpCircle className="h-4 w-4" />;
       default:
-        return <Activity className="h-4 w-4" />
+        return <Activity className="h-4 w-4" />;
     }
-  }
+  };
 
   const acknowledgeAlert = (alertId: string) => {
-    setAlerts((prev) => prev.map((alert) => (alert.id === alertId ? { ...alert, acknowledged: true } : alert)))
-  }
+    setAlerts((prev) =>
+      prev.map((alert) => (alert.id === alertId ? { ...alert, acknowledged: true } : alert))
+    );
+  };
 
   const resolveAlert = (alertId: string) => {
     setAlerts((prev) =>
-      prev.map((alert) => (alert.id === alertId ? { ...alert, resolved: true, acknowledged: true } : alert)),
-    )
-  }
+      prev.map((alert) =>
+        alert.id === alertId ? { ...alert, resolved: true, acknowledged: true } : alert
+      )
+    );
+  };
 
   // Calculate alert counts
-  const activeAlerts = alerts.filter((alert) => !alert.resolved)
-  const resolvedAlerts = alerts.filter((alert) => alert.resolved)
-  const unacknowledgedAlerts = alerts.filter((alert) => !alert.acknowledged)
+  const activeAlerts = alerts.filter((alert) => !alert.resolved);
+  const resolvedAlerts = alerts.filter((alert) => alert.resolved);
+  const unacknowledgedAlerts = alerts.filter((alert) => !alert.acknowledged);
 
   // Filter alerts based on severity, tab, and unacknowledged filter
   const getFilteredAlerts = () => {
-    let filtered = alerts
+    let filtered = alerts;
 
     // Filter by severity
-    if (selectedSeverity !== "all") {
-      filtered = filtered.filter((alert) => alert.severity === selectedSeverity)
+    if (selectedSeverity !== 'all') {
+      filtered = filtered.filter((alert) => alert.severity === selectedSeverity);
     }
 
     // Filter by tab
     switch (activeTab) {
-      case "active":
-        filtered = filtered.filter((alert) => !alert.resolved)
+      case 'active':
+        filtered = filtered.filter((alert) => !alert.resolved);
         // Apply unacknowledged filter only for active tab
         if (showUnacknowledgedOnly) {
-          filtered = filtered.filter((alert) => !alert.acknowledged)
+          filtered = filtered.filter((alert) => !alert.acknowledged);
         }
-        break
-      case "resolved":
-        filtered = filtered.filter((alert) => alert.resolved)
-        break
-      case "all":
+        break;
+      case 'resolved':
+        filtered = filtered.filter((alert) => alert.resolved);
+        break;
+      case 'all':
       default:
         // Show all alerts
-        break
+        break;
     }
 
-    return filtered
-  }
+    return filtered;
+  };
 
   // Handle card click to set active tab and filters
   const handleFilterCardClick = (filter: string) => {
     switch (filter) {
-      case "active":
-        setActiveTab("active")
-        setShowUnacknowledgedOnly(false)
-        break
-      case "unacknowledged":
-        setActiveTab("active")
-        setShowUnacknowledgedOnly(true)
-        break
-      case "resolved":
-        setActiveTab("resolved")
-        setShowUnacknowledgedOnly(false)
-        break
-      case "total":
-        setActiveTab("all")
-        setShowUnacknowledgedOnly(false)
-        break
+      case 'active':
+        setActiveTab('active');
+        setShowUnacknowledgedOnly(false);
+        break;
+      case 'unacknowledged':
+        setActiveTab('active');
+        setShowUnacknowledgedOnly(true);
+        break;
+      case 'resolved':
+        setActiveTab('resolved');
+        setShowUnacknowledgedOnly(false);
+        break;
+      case 'total':
+        setActiveTab('all');
+        setShowUnacknowledgedOnly(false);
+        break;
     }
-  }
+  };
 
-  const filteredAlerts = getFilteredAlerts()
+  const filteredAlerts = getFilteredAlerts();
 
   return (
     <SidebarInset>
       <header
         className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
-          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'
         } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
       >
         <SidebarTrigger className="-ml-1" />
@@ -298,9 +308,11 @@ export default function AlertsPanel() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <Card
             className={`cursor-pointer transition-all ${
-              activeTab === "active" && !showUnacknowledgedOnly ? "ring-2 ring-primary" : "hover:bg-muted/50"
+              activeTab === 'active' && !showUnacknowledgedOnly
+                ? 'ring-2 ring-primary'
+                : 'hover:bg-muted/50'
             }`}
-            onClick={() => handleFilterCardClick("active")}
+            onClick={() => handleFilterCardClick('active')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active</CardTitle>
@@ -314,9 +326,11 @@ export default function AlertsPanel() {
 
           <Card
             className={`cursor-pointer transition-all ${
-              activeTab === "active" && showUnacknowledgedOnly ? "ring-2 ring-primary" : "hover:bg-muted/50"
+              activeTab === 'active' && showUnacknowledgedOnly
+                ? 'ring-2 ring-primary'
+                : 'hover:bg-muted/50'
             }`}
-            onClick={() => handleFilterCardClick("unacknowledged")}
+            onClick={() => handleFilterCardClick('unacknowledged')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Unacknowledged</CardTitle>
@@ -330,9 +344,9 @@ export default function AlertsPanel() {
 
           <Card
             className={`cursor-pointer transition-all ${
-              activeTab === "resolved" ? "ring-2 ring-primary" : "hover:bg-muted/50"
+              activeTab === 'resolved' ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
             }`}
-            onClick={() => handleFilterCardClick("resolved")}
+            onClick={() => handleFilterCardClick('resolved')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Resolved</CardTitle>
@@ -346,9 +360,9 @@ export default function AlertsPanel() {
 
           <Card
             className={`cursor-pointer transition-all ${
-              activeTab === "all" ? "ring-2 ring-primary" : "hover:bg-muted/50"
+              activeTab === 'all' ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
             }`}
-            onClick={() => handleFilterCardClick("total")}
+            onClick={() => handleFilterCardClick('total')}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Alerts</CardTitle>
@@ -382,10 +396,18 @@ export default function AlertsPanel() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Severities</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="critical" className="text-red-500 focus:text-red-500">
+                  Critical
+                </SelectItem>
+                <SelectItem value="high" className="text-orange-500 focus:text-orange-500">
+                  High
+                </SelectItem>
+                <SelectItem value="medium" className="text-yellow-500 focus:text-yellow-500">
+                  Medium
+                </SelectItem>
+                <SelectItem value="low" className="text-blue-500 focus:text-blue-500">
+                  Low
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -398,19 +420,24 @@ export default function AlertsPanel() {
                     <div className="text-center">
                       <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
                       <h3 className="text-lg font-medium mb-2">
-                        {showUnacknowledgedOnly ? "No Unacknowledged Alerts" : "No Active Alerts"}
+                        {showUnacknowledgedOnly ? 'No Unacknowledged Alerts' : 'No Active Alerts'}
                       </h3>
                       <p className="text-muted-foreground">
                         {showUnacknowledgedOnly
-                          ? "All active alerts have been acknowledged"
-                          : "All alerts have been resolved"}
+                          ? 'All active alerts have been acknowledged'
+                          : 'All alerts have been resolved'}
                       </p>
                     </div>
                   </CardContent>
                 </Card>
               ) : (
                 filteredAlerts.map((alert) => (
-                  <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
+                  <AlertCard
+                    key={alert.id}
+                    alert={alert}
+                    onAcknowledge={acknowledgeAlert}
+                    onResolve={resolveAlert}
+                  />
                 ))
               )}
             </div>
@@ -430,7 +457,12 @@ export default function AlertsPanel() {
                 </Card>
               ) : (
                 filteredAlerts.map((alert) => (
-                  <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
+                  <AlertCard
+                    key={alert.id}
+                    alert={alert}
+                    onAcknowledge={acknowledgeAlert}
+                    onResolve={resolveAlert}
+                  />
                 ))
               )}
             </div>
@@ -450,7 +482,12 @@ export default function AlertsPanel() {
                 </Card>
               ) : (
                 filteredAlerts.map((alert) => (
-                  <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
+                  <AlertCard
+                    key={alert.id}
+                    alert={alert}
+                    onAcknowledge={acknowledgeAlert}
+                    onResolve={resolveAlert}
+                  />
                 ))
               )}
             </div>
@@ -458,7 +495,7 @@ export default function AlertsPanel() {
         </Tabs>
       </div>
     </SidebarInset>
-  )
+  );
 }
 
 function AlertCard({
@@ -466,72 +503,72 @@ function AlertCard({
   onAcknowledge,
   onResolve,
 }: {
-  alert: Alert
-  onAcknowledge: (id: string) => void
-  onResolve: (id: string) => void
+  alert: Alert;
+  onAcknowledge: (id: string) => void;
+  onResolve: (id: string) => void;
 }) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "critical":
-        return "border-red-400 bg-red-500/10"
-      case "high":
-        return "border-orange-400 bg-orange-500/10"
-      case "medium":
-        return "border-yellow-400 bg-yellow-500/10"
-      case "low":
-        return "border-blue-400 bg-blue-500/10"
+      case 'critical':
+        return 'border-red-400 bg-red-500/10';
+      case 'high':
+        return 'border-orange-400 bg-orange-500/10';
+      case 'medium':
+        return 'border-yellow-400 bg-yellow-500/10';
+      case 'low':
+        return 'border-blue-400 bg-blue-500/10';
       default:
-        return "border-gray-400 bg-gray-500/10"
+        return 'border-gray-400 bg-gray-500/10';
     }
-  }
+  };
 
   const getSeverityBadgeColor = (severity: string) => {
     switch (severity) {
-      case "critical":
-        return "bg-red-500 hover:bg-red-600"
-      case "high":
-        return "bg-orange-500 hover:bg-orange-600"
-      case "medium":
-        return "bg-yellow-500 hover:bg-yellow-600"
-      case "low":
-        return "bg-blue-500 hover:bg-blue-600"
+      case 'critical':
+        return 'bg-red-500 hover:bg-red-600';
+      case 'high':
+        return 'bg-orange-500 hover:bg-orange-600';
+      case 'medium':
+        return 'bg-yellow-500 hover:bg-yellow-600';
+      case 'low':
+        return 'bg-blue-500 hover:bg-blue-600';
       default:
-        return "bg-gray-500 hover:bg-gray-600"
+        return 'bg-gray-500 hover:bg-gray-600';
     }
-  }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "detection":
-        return <Eye className="h-4 w-4" />
-      case "system":
-        return <Settings className="h-4 w-4" />
-      case "security":
-        return <AlertTriangle className="h-4 w-4" />
-      case "weather":
-        return <Activity className="h-4 w-4" />
+      case 'detection':
+        return <Eye className="h-4 w-4" />;
+      case 'system':
+        return <Settings className="h-4 w-4" />;
+      case 'security':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'weather':
+        return <Activity className="h-4 w-4" />;
       default:
-        return <Bell className="h-4 w-4" />
+        return <Bell className="h-4 w-4" />;
     }
-  }
+  };
 
   const getDetectionIcon = (type?: string) => {
     switch (type) {
-      case "aircraft":
-        return <Plane className="h-4 w-4" />
-      case "drone":
-        return <Drone className="h-4 w-4" />
-      case "bird":
-        return <Bird className="h-4 w-4" />
-      case "unknown":
-        return <HelpCircle className="h-4 w-4" />
+      case 'aircraft':
+        return <Plane className="h-4 w-4" />;
+      case 'drone':
+        return <Drone className="h-4 w-4" />;
+      case 'bird':
+        return <Bird className="h-4 w-4" />;
+      case 'unknown':
+        return <HelpCircle className="h-4 w-4" />;
       default:
-        return <Activity className="h-4 w-4" />
+        return <Activity className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
-    <Card className={`${getSeverityColor(alert.severity)} ${alert.resolved ? "opacity-60" : ""}`}>
+    <Card className={`${getSeverityColor(alert.severity)} ${alert.resolved ? 'opacity-60' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -583,7 +620,12 @@ function AlertCard({
 
           <div className="flex flex-wrap items-center gap-2 pt-2">
             {!alert.acknowledged && (
-              <Button size="sm" variant="outline" onClick={() => onAcknowledge(alert.id)} className="text-xs">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onAcknowledge(alert.id)}
+                className="text-xs"
+              >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Acknowledge
               </Button>
@@ -607,5 +649,5 @@ function AlertCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

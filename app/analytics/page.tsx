@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plane,
   Cloud,
@@ -18,148 +18,154 @@ import {
   TrendingUp,
   Droplets,
   Layers,
-} from "lucide-react"
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
+} from 'lucide-react';
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAutoHideHeader } from '@/hooks/use-auto-hide-header';
 
 interface AircraftData {
-  id: string
-  callsign: string
-  registration: string
-  aircraft_type: string
-  altitude: number
-  speed: number
-  heading: number
-  latitude: number
-  longitude: number
-  timestamp: string
-  distance_km: number
+  id: string;
+  callsign: string;
+  registration: string;
+  aircraft_type: string;
+  altitude: number;
+  speed: number;
+  heading: number;
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+  distance_km: number;
 }
 
 interface WeatherData {
-  station: string
-  timestamp: string
-  temperature_c: number
-  dewpoint_c: number
-  humidity: number
-  pressure_hpa: number
-  wind_speed_kt: number
-  wind_direction: number
-  visibility_km: number
-  ceiling_ft?: number
-  conditions: string
-  raw_metar: string
+  station: string;
+  timestamp: string;
+  temperature_c: number;
+  dewpoint_c: number;
+  humidity: number;
+  pressure_hpa: number;
+  wind_speed_kt: number;
+  wind_direction: number;
+  visibility_km: number;
+  ceiling_ft?: number;
+  conditions: string;
+  raw_metar: string;
 }
 
 interface CameraGeofence {
-  id: string
-  name: string
-  location: string
+  id: string;
+  name: string;
+  location: string;
   bounds: {
-    north: number
-    south: number
-    east: number
-    west: number
-  }
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
 }
 
 const cameraGeofences: CameraGeofence[] = [
   {
-    id: "cam-001",
-    name: "North Perimeter",
-    location: "Runway 09L Approach",
+    id: 'cam-001',
+    name: 'North Perimeter',
+    location: 'Runway 09L Approach',
     bounds: { north: 40.715, south: 40.71, east: -74.004, west: -74.008 },
   },
   {
-    id: "cam-002",
-    name: "South Tower",
-    location: "Control Tower View",
+    id: 'cam-002',
+    name: 'South Tower',
+    location: 'Control Tower View',
     bounds: { north: 40.714, south: 40.709, east: -74.003, west: -74.007 },
   },
   {
-    id: "cam-003",
-    name: "East Taxiway",
-    location: "Taxiway Alpha",
+    id: 'cam-003',
+    name: 'East Taxiway',
+    location: 'Taxiway Alpha',
     bounds: { north: 40.716, south: 40.711, east: -74.002, west: -74.006 },
   },
   {
-    id: "cam-004",
-    name: "West Hangar",
-    location: "Maintenance Area",
+    id: 'cam-004',
+    name: 'West Hangar',
+    location: 'Maintenance Area',
     bounds: { north: 40.713, south: 40.708, east: -74.007, west: -74.011 },
   },
   {
-    id: "cam-005",
-    name: "Cargo Ramp",
-    location: "Freight Terminal",
+    id: 'cam-005',
+    name: 'Cargo Ramp',
+    location: 'Freight Terminal',
     bounds: { north: 40.712, south: 40.707, east: -74.005, west: -74.009 },
   },
   {
-    id: "cam-006",
-    name: "Terminal Gate",
-    location: "Passenger Gates 1-5",
+    id: 'cam-006',
+    name: 'Terminal Gate',
+    location: 'Passenger Gates 1-5',
     bounds: { north: 40.714, south: 40.709, east: -74.004, west: -74.008 },
   },
   {
-    id: "cam-007",
-    name: "Fuel Farm",
-    location: "Aviation Fuel Storage",
+    id: 'cam-007',
+    name: 'Fuel Farm',
+    location: 'Aviation Fuel Storage',
     bounds: { north: 40.711, south: 40.706, east: -74.006, west: -74.01 },
   },
   {
-    id: "cam-008",
-    name: "Emergency Access",
-    location: "ARFF Station",
+    id: 'cam-008',
+    name: 'Emergency Access',
+    location: 'ARFF Station',
     bounds: { north: 40.713, south: 40.708, east: -74.003, west: -74.007 },
   },
-]
+];
 
 const mockAircraftData: AircraftData[] = [
   {
-    id: "ac-001",
-    callsign: "UAL1234",
-    registration: "N12345",
-    aircraft_type: "B737-800",
+    id: 'ac-001',
+    callsign: 'UAL1234',
+    registration: 'N12345',
+    aircraft_type: 'B737-800',
     altitude: 3500,
     speed: 180,
     heading: 270,
     latitude: 40.7128,
     longitude: -74.006,
-    timestamp: "2024-01-15T14:35:22Z",
+    timestamp: '2024-01-15T14:35:22Z',
     distance_km: 2.3,
   },
   {
-    id: "ac-002",
-    callsign: "AAL5678",
-    registration: "N67890",
-    aircraft_type: "A320",
+    id: 'ac-002',
+    callsign: 'AAL5678',
+    registration: 'N67890',
+    aircraft_type: 'A320',
     altitude: 1200,
     speed: 140,
     heading: 90,
     latitude: 40.715,
     longitude: -74.004,
-    timestamp: "2024-01-15T14:34:15Z",
+    timestamp: '2024-01-15T14:34:15Z',
     distance_km: 1.8,
   },
   {
-    id: "ac-003",
-    callsign: "DAL9012",
-    registration: "N24680",
-    aircraft_type: "B777-200",
+    id: 'ac-003',
+    callsign: 'DAL9012',
+    registration: 'N24680',
+    aircraft_type: 'B777-200',
     altitude: 5000,
     speed: 220,
     heading: 180,
     latitude: 40.71,
     longitude: -74.008,
-    timestamp: "2024-01-15T14:33:45Z",
+    timestamp: '2024-01-15T14:33:45Z',
     distance_km: 3.1,
   },
-]
+];
 
 const mockWeatherData: WeatherData = {
-  station: "KJFK",
-  timestamp: "2024-01-15T14:35:00Z",
+  station: 'KJFK',
+  timestamp: '2024-01-15T14:35:00Z',
   temperature_c: 12,
   dewpoint_c: 8,
   humidity: 75,
@@ -168,16 +174,16 @@ const mockWeatherData: WeatherData = {
   wind_direction: 270,
   visibility_km: 16,
   ceiling_ft: 2500,
-  conditions: "Few Clouds",
-  raw_metar: "KJFK 151435Z 27010KT 10SM FEW025 12/08 A2992 RMK AO2",
-}
+  conditions: 'Few Clouds',
+  raw_metar: 'KJFK 151435Z 27010KT 10SM FEW025 12/08 A2992 RMK AO2',
+};
 
 export default function AnalyticsHub() {
-  const [aircraftData, setAircraftData] = useState<AircraftData[]>(mockAircraftData)
-  const [weatherData, setWeatherData] = useState<WeatherData>(mockWeatherData)
-  const [selectedAircraft, setSelectedAircraft] = useState<string | null>(null)
-  const [selectedCameraFilter, setSelectedCameraFilter] = useState<string>("all")
-  const isHeaderVisible = useAutoHideHeader()
+  const [aircraftData, setAircraftData] = useState<AircraftData[]>(mockAircraftData);
+  const [weatherData, setWeatherData] = useState<WeatherData>(mockWeatherData);
+  const [selectedAircraft, setSelectedAircraft] = useState<string | null>(null);
+  const [selectedCameraFilter, setSelectedCameraFilter] = useState<string>('all');
+  const isHeaderVisible = useAutoHideHeader();
 
   useEffect(() => {
     // Simulate real-time updates
@@ -191,40 +197,40 @@ export default function AnalyticsHub() {
           latitude: aircraft.latitude + (Math.random() - 0.5) * 0.001,
           longitude: aircraft.longitude + (Math.random() - 0.5) * 0.001,
           timestamp: new Date().toISOString(),
-        })),
-      )
-    }, 3000)
+        }))
+      );
+    }, 3000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   const getAltitudeColor = (altitude: number) => {
-    if (altitude < 1000) return "text-red-400 font-semibold"
-    if (altitude < 3000) return "text-yellow-400 font-semibold"
-    return "text-green-400 font-semibold"
-  }
+    if (altitude < 1000) return 'text-red-400 font-semibold';
+    if (altitude < 3000) return 'text-yellow-400 font-semibold';
+    return 'text-green-400 font-semibold';
+  };
 
   const getWindDirection = (degrees: number) => {
     const directions = [
-      "N",
-      "NNE",
-      "NE",
-      "ENE",
-      "E",
-      "ESE",
-      "SE",
-      "SSE",
-      "S",
-      "SSW",
-      "SW",
-      "WSW",
-      "W",
-      "WNW",
-      "NW",
-      "NNW",
-    ]
-    return directions[Math.round(degrees / 22.5) % 16]
-  }
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW',
+    ];
+    return directions[Math.round(degrees / 22.5) % 16];
+  };
 
   const isAircraftInCameraBounds = (aircraft: AircraftData, camera: CameraGeofence): boolean => {
     return (
@@ -232,25 +238,25 @@ export default function AnalyticsHub() {
       aircraft.latitude <= camera.bounds.north &&
       aircraft.longitude >= camera.bounds.west &&
       aircraft.longitude <= camera.bounds.east
-    )
-  }
+    );
+  };
 
   const getFilteredAircraft = () => {
-    if (selectedCameraFilter === "all") return aircraftData
+    if (selectedCameraFilter === 'all') return aircraftData;
 
-    const selectedCamera = cameraGeofences.find((cam) => cam.id === selectedCameraFilter)
-    if (!selectedCamera) return aircraftData
+    const selectedCamera = cameraGeofences.find((cam) => cam.id === selectedCameraFilter);
+    if (!selectedCamera) return aircraftData;
 
-    return aircraftData.filter((aircraft) => isAircraftInCameraBounds(aircraft, selectedCamera))
-  }
+    return aircraftData.filter((aircraft) => isAircraftInCameraBounds(aircraft, selectedCamera));
+  };
 
-  const filteredAircraftData = getFilteredAircraft()
+  const filteredAircraftData = getFilteredAircraft();
 
   return (
     <SidebarInset>
       <header
         className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
-          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'
         } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
       >
         <SidebarTrigger className="-ml-1" />
@@ -309,7 +315,10 @@ export default function AnalyticsHub() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {Math.round(aircraftData.reduce((sum, ac) => sum + ac.altitude, 0) / aircraftData.length)} ft
+                    {Math.round(
+                      aircraftData.reduce((sum, ac) => sum + ac.altitude, 0) / aircraftData.length
+                    )}{' '}
+                    ft
                   </div>
                   <p className="text-xs text-muted-foreground">Within normal range</p>
                 </CardContent>
@@ -323,7 +332,8 @@ export default function AnalyticsHub() {
                 <CardContent>
                   <div className="text-2xl font-bold">{weatherData.wind_speed_kt} kt</div>
                   <p className="text-xs text-muted-foreground">
-                    From {getWindDirection(weatherData.wind_direction)} ({weatherData.wind_direction}°)
+                    From {getWindDirection(weatherData.wind_direction)} (
+                    {weatherData.wind_direction}°)
                   </p>
                 </CardContent>
               </Card>
@@ -363,7 +373,9 @@ export default function AnalyticsHub() {
                   <div className="text-center">
                     <Wind className="h-8 w-8 mx-auto mb-2 text-yellow-400" />
                     <div className="text-2xl font-bold">{weatherData.wind_speed_kt}</div>
-                    <div className="text-sm text-muted-foreground">kt @ {weatherData.wind_direction}°</div>
+                    <div className="text-sm text-muted-foreground">
+                      kt @ {weatherData.wind_direction}°
+                    </div>
                   </div>
                   <div className="text-center">
                     <Eye className="h-8 w-8 mx-auto mb-2 text-purple-400" />
@@ -403,7 +415,8 @@ export default function AnalyticsHub() {
                           {Math.round(aircraft.altitude)} ft
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {Math.round(aircraft.speed)} kt • {Math.round(aircraft.distance_km * 10) / 10} km
+                          {Math.round(aircraft.speed)} kt •{' '}
+                          {Math.round(aircraft.distance_km * 10) / 10} km
                         </div>
                       </div>
                     </div>
@@ -446,8 +459,8 @@ export default function AnalyticsHub() {
                           key={aircraft.id}
                           className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
                             selectedAircraft === aircraft.id
-                              ? "border-primary bg-primary/10 shadow-md"
-                              : "border-border/40 hover:bg-muted/50 hover:border-border/60"
+                              ? 'border-primary bg-primary/10 shadow-md'
+                              : 'border-border/40 hover:bg-muted/50 hover:border-border/60'
                           }`}
                           onClick={() => setSelectedAircraft(aircraft.id)}
                         >
@@ -457,7 +470,9 @@ export default function AnalyticsHub() {
                                 <Plane className="h-4 w-4 text-blue-500" />
                                 <div>
                                   <div className="font-medium">{aircraft.callsign}</div>
-                                  <div className="text-sm text-muted-foreground">{aircraft.aircraft_type}</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {aircraft.aircraft_type}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -465,19 +480,22 @@ export default function AnalyticsHub() {
                               <div className={`font-medium ${getAltitudeColor(aircraft.altitude)}`}>
                                 {Math.round(aircraft.altitude)} ft
                               </div>
-                              <div className="text-sm text-muted-foreground">{Math.round(aircraft.speed)} kt</div>
+                              <div className="text-sm text-muted-foreground">
+                                {Math.round(aircraft.speed)} kt
+                              </div>
                             </div>
                           </div>
                           <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Heading:</span> {Math.round(aircraft.heading)}°
+                              <span className="text-muted-foreground">Heading:</span>{' '}
+                              {Math.round(aircraft.heading)}°
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Distance:</span>{" "}
+                              <span className="text-muted-foreground">Distance:</span>{' '}
                               {Math.round(aircraft.distance_km * 10) / 10} km
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Updated:</span>{" "}
+                              <span className="text-muted-foreground">Updated:</span>{' '}
                               {new Date(aircraft.timestamp).toLocaleTimeString()}
                             </div>
                           </div>
@@ -501,14 +519,16 @@ export default function AnalyticsHub() {
                     {selectedAircraft ? (
                       <div className="space-y-4">
                         {(() => {
-                          const aircraft = aircraftData.find((ac) => ac.id === selectedAircraft)
-                          if (!aircraft) return <div>Aircraft not found</div>
+                          const aircraft = aircraftData.find((ac) => ac.id === selectedAircraft);
+                          if (!aircraft) return <div>Aircraft not found</div>;
 
                           return (
                             <>
                               <div>
                                 <h3 className="font-medium text-lg">{aircraft.callsign}</h3>
-                                <p className="text-sm text-muted-foreground">{aircraft.aircraft_type}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {aircraft.aircraft_type}
+                                </p>
                               </div>
 
                               <div className="space-y-3">
@@ -518,21 +538,29 @@ export default function AnalyticsHub() {
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Altitude:</span>
-                                  <span className={`font-medium ${getAltitudeColor(aircraft.altitude)}`}>
+                                  <span
+                                    className={`font-medium ${getAltitudeColor(aircraft.altitude)}`}
+                                  >
                                     {Math.round(aircraft.altitude)} ft
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Speed:</span>
-                                  <span className="font-medium">{Math.round(aircraft.speed)} kt</span>
+                                  <span className="font-medium">
+                                    {Math.round(aircraft.speed)} kt
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Heading:</span>
-                                  <span className="font-medium">{Math.round(aircraft.heading)}°</span>
+                                  <span className="font-medium">
+                                    {Math.round(aircraft.heading)}°
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Distance:</span>
-                                  <span className="font-medium">{Math.round(aircraft.distance_km * 10) / 10} km</span>
+                                  <span className="font-medium">
+                                    {Math.round(aircraft.distance_km * 10) / 10} km
+                                  </span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Position:</span>
@@ -549,7 +577,7 @@ export default function AnalyticsHub() {
                                 </Button>
                               </div>
                             </>
-                          )
+                          );
                         })()}
                       </div>
                     ) : (
@@ -573,7 +601,8 @@ export default function AnalyticsHub() {
                     Current Conditions
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Station: {weatherData.station} • Updated: {new Date(weatherData.timestamp).toLocaleString()}
+                    Station: {weatherData.station} • Updated:{' '}
+                    {new Date(weatherData.timestamp).toLocaleString()}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -592,7 +621,8 @@ export default function AnalyticsHub() {
                         <div>
                           <div className="text-2xl font-bold">{weatherData.wind_speed_kt} kt</div>
                           <div className="text-sm text-muted-foreground">
-                            {getWindDirection(weatherData.wind_direction)} ({weatherData.wind_direction}°)
+                            {getWindDirection(weatherData.wind_direction)} (
+                            {weatherData.wind_direction}°)
                           </div>
                         </div>
                       </div>
@@ -643,7 +673,9 @@ export default function AnalyticsHub() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-3 bg-muted rounded-lg font-mono text-sm break-all">{weatherData.raw_metar}</div>
+                    <div className="p-3 bg-muted rounded-lg font-mono text-sm break-all">
+                      {weatherData.raw_metar}
+                    </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -672,7 +704,9 @@ export default function AnalyticsHub() {
                   <Activity className="h-5 w-5" />
                   Event Correlations
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">Matching visual detections with ADS-B aircraft data</p>
+                <p className="text-sm text-muted-foreground">
+                  Matching visual detections with ADS-B aircraft data
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -757,5 +791,5 @@ export default function AnalyticsHub() {
         </Tabs>
       </div>
     </SidebarInset>
-  )
+  );
 }
