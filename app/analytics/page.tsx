@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
 
 interface AircraftData {
   id: string
@@ -176,6 +177,7 @@ export default function AnalyticsHub() {
   const [weatherData, setWeatherData] = useState<WeatherData>(mockWeatherData)
   const [selectedAircraft, setSelectedAircraft] = useState<string | null>(null)
   const [selectedCameraFilter, setSelectedCameraFilter] = useState<string>("all")
+  const isHeaderVisible = useAutoHideHeader()
 
   useEffect(() => {
     // Simulate real-time updates
@@ -246,7 +248,11 @@ export default function AnalyticsHub() {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+        } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
+      >
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">Analytics Hub</h1>
@@ -255,28 +261,36 @@ export default function AnalyticsHub() {
           </Badge>
         </div>
         <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <Plane className="h-4 w-4" />
             <span>{aircraftData.length} aircraft tracked</span>
           </div>
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            <span>ADS-B Active</span>
+            <span className="hidden sm:inline">ADS-B Active</span>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4 pt-20 md:pt-4">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="aircraft">Aircraft Tracking</TabsTrigger>
-            <TabsTrigger value="weather">Weather Data</TabsTrigger>
-            <TabsTrigger value="correlations">Event Correlations</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="aircraft" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Aircraft
+            </TabsTrigger>
+            <TabsTrigger value="weather" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Weather
+            </TabsTrigger>
+            <TabsTrigger value="correlations" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Events
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Active Aircraft</CardTitle>
@@ -373,9 +387,9 @@ export default function AnalyticsHub() {
                   {aircraftData.slice(0, 5).map((aircraft) => (
                     <div
                       key={aircraft.id}
-                      className="flex items-center justify-between p-3 border border-border/20 rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-border/20 rounded-lg"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 mb-2 sm:mb-0">
                         <Plane className="h-5 w-5 text-blue-500" />
                         <div>
                           <div className="font-medium">{aircraft.callsign}</div>
@@ -405,13 +419,13 @@ export default function AnalyticsHub() {
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
+                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex items-center gap-2">
                         <Plane className="h-5 w-5" />
                         Active Aircraft ({filteredAircraftData.length})
                       </div>
                       <Select value={selectedCameraFilter} onValueChange={setSelectedCameraFilter}>
-                        <SelectTrigger className="w-48">
+                        <SelectTrigger className="w-full sm:w-48">
                           <SelectValue placeholder="Filter by camera" />
                         </SelectTrigger>
                         <SelectContent>
@@ -437,7 +451,7 @@ export default function AnalyticsHub() {
                           }`}
                           onClick={() => setSelectedAircraft(aircraft.id)}
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-2">
                                 <Plane className="h-4 w-4 text-blue-500" />
@@ -454,7 +468,7 @@ export default function AnalyticsHub() {
                               <div className="text-sm text-muted-foreground">{Math.round(aircraft.speed)} kt</div>
                             </div>
                           </div>
-                          <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+                          <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Heading:</span> {Math.round(aircraft.heading)}°
                             </div>
@@ -563,7 +577,7 @@ export default function AnalyticsHub() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <Thermometer className="h-5 w-5 text-blue-500" />
@@ -629,7 +643,7 @@ export default function AnalyticsHub() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-3 bg-muted rounded-lg font-mono text-sm">{weatherData.raw_metar}</div>
+                    <div className="p-3 bg-muted rounded-lg font-mono text-sm break-all">{weatherData.raw_metar}</div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -663,7 +677,7 @@ export default function AnalyticsHub() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 border border-green-500/20 bg-green-500/5 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="font-medium">Correlation Match</span>
@@ -673,7 +687,7 @@ export default function AnalyticsHub() {
                       </div>
                       <span className="text-sm text-muted-foreground">2 min ago</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Visual Detection:</span>
                         <div>Aircraft detected on North Perimeter</div>
@@ -688,7 +702,7 @@ export default function AnalyticsHub() {
                   </div>
 
                   <div className="p-4 border border-yellow-500/20 bg-yellow-500/5 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-yellow-500 rounded-full" />
                         <span className="font-medium">Partial Match</span>
@@ -698,7 +712,7 @@ export default function AnalyticsHub() {
                       </div>
                       <span className="text-sm text-muted-foreground">5 min ago</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Visual Detection:</span>
                         <div>Drone detected on East Taxiway</div>
@@ -713,7 +727,7 @@ export default function AnalyticsHub() {
                   </div>
 
                   <div className="p-4 border border-red-500/20 bg-red-500/5 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-red-500 rounded-full" />
                         <span className="font-medium">No Correlation</span>
@@ -723,7 +737,7 @@ export default function AnalyticsHub() {
                       </div>
                       <span className="text-sm text-muted-foreground">8 min ago</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Visual Detection:</span>
                         <div>Unknown object on Cargo Ramp</div>

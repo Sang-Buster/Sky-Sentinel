@@ -11,24 +11,19 @@ import {
   Play,
   Pause,
   Maximize,
-  Volume2,
-  VolumeX,
   Plane,
   Cloud,
   ArrowRight,
+  Video,
+  ImageIcon,
+  DrillIcon as Drone,
+  Bird,
+  HelpCircle,
+  Clock,
 } from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import Link from "next/link"
-
-interface CameraFeed {
-  id: string
-  name: string
-  location: string
-  status: "online" | "offline" | "recording"
-  detections: number
-  lastDetection?: string
-  rtspUrl: string
-}
+import { useCameraStore } from "@/lib/camera-store"
 
 interface Detection {
   id: string
@@ -39,82 +34,6 @@ interface Detection {
   bbox: { x: number; y: number; width: number; height: number }
 }
 
-const mockCameras: CameraFeed[] = [
-  {
-    id: "cam-001",
-    name: "North Perimeter",
-    location: "Runway 09L Approach",
-    status: "recording",
-    detections: 12,
-    lastDetection: "2 min ago",
-    rtspUrl: "rtsp://192.168.1.101:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-002",
-    name: "South Tower",
-    location: "Control Tower View",
-    status: "online",
-    detections: 8,
-    lastDetection: "5 min ago",
-    rtspUrl: "rtsp://192.168.1.102:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-003",
-    name: "East Taxiway",
-    location: "Taxiway Alpha",
-    status: "recording",
-    detections: 15,
-    lastDetection: "1 min ago",
-    rtspUrl: "rtsp://192.168.1.103:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-004",
-    name: "West Hangar",
-    location: "Maintenance Area",
-    status: "online",
-    detections: 3,
-    lastDetection: "12 min ago",
-    rtspUrl: "rtsp://192.168.1.104:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-005",
-    name: "Cargo Ramp",
-    location: "Freight Terminal",
-    status: "recording",
-    detections: 7,
-    lastDetection: "3 min ago",
-    rtspUrl: "rtsp://192.168.1.105:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-006",
-    name: "Terminal Gate",
-    location: "Passenger Gates 1-5",
-    status: "online",
-    detections: 4,
-    lastDetection: "8 min ago",
-    rtspUrl: "rtsp://192.168.1.106:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-007",
-    name: "Fuel Farm",
-    location: "Aviation Fuel Storage",
-    status: "recording",
-    detections: 2,
-    lastDetection: "15 min ago",
-    rtspUrl: "rtsp://192.168.1.107:554/cam/realmonitor?channel=1&subtype=0",
-  },
-  {
-    id: "cam-008",
-    name: "Emergency Access",
-    location: "ARFF Station",
-    status: "online",
-    detections: 1,
-    lastDetection: "22 min ago",
-    rtspUrl: "rtsp://192.168.1.108:554/cam/realmonitor?channel=1&subtype=0",
-  },
-]
-
-// Expanded mock detections for recent activity
 const mockDetections: Detection[] = [
   {
     id: "det-001",
@@ -174,7 +93,7 @@ const mockDetections: Detection[] = [
   },
   {
     id: "det-008",
-    cameraId: "cam-001",
+    cameraId: "cam-008",
     type: "drone",
     confidence: 0.82,
     timestamp: "2024-01-15T14:12:33Z",
@@ -183,26 +102,39 @@ const mockDetections: Detection[] = [
 ]
 
 export default function Dashboard() {
-  const [cameras, setCameras] = useState<CameraFeed[]>(mockCameras)
+  const { cameras } = useCameraStore()
   const [recentDetections, setRecentDetections] = useState<Detection[]>(mockDetections)
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({})
-  const [isMuted, setIsMuted] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    // Simulate real-time updates
+    // Simulate real-time updates for camera status and detections
     const interval = setInterval(() => {
-      setCameras((prev) =>
-        prev.map((cam) => ({
-          ...cam,
-          detections: cam.detections + Math.floor(Math.random() * 2),
-          lastDetection: Math.random() > 0.7 ? "Just now" : cam.lastDetection,
-        })),
-      )
-    }, 5000)
+      // Update detection timestamps randomly
+      if (Math.random() > 0.7) {
+        const randomCameraId = cameras[Math.floor(Math.random() * cameras.length)]?.id
+        if (randomCameraId) {
+          const detectionTypes = ["aircraft", "drone", "bird", "unknown"] as const
+          const newDetection: Detection = {
+            id: `det-${Date.now()}`,
+            cameraId: randomCameraId,
+            type: detectionTypes[Math.floor(Math.random() * detectionTypes.length)],
+            confidence: Math.random() * 0.4 + 0.6, // 60-100%
+            timestamp: new Date().toISOString(),
+            bbox: {
+              x: Math.random() * 400,
+              y: Math.random() * 300,
+              width: 50 + Math.random() * 100,
+              height: 30 + Math.random() * 80,
+            },
+          }
+          setRecentDetections((prev) => [newDetection, ...prev.slice(0, 19)]) // Keep last 20
+        }
+      }
+    }, 8000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [cameras])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -220,11 +152,30 @@ export default function Dashboard() {
   const getDetectionIcon = (type: string) => {
     switch (type) {
       case "aircraft":
-        return <Plane className="h-4 w-4" />
+        return <Plane className="h-3 w-3" />
       case "drone":
-        return <Activity className="h-4 w-4" />
+        return <Drone className="h-3 w-3" />
+      case "bird":
+        return <Bird className="h-3 w-3" />
+      case "unknown":
+        return <HelpCircle className="h-3 w-3" />
       default:
-        return <AlertTriangle className="h-4 w-4" />
+        return <AlertTriangle className="h-3 w-3" />
+    }
+  }
+
+  const getDetectionColor = (type: string) => {
+    switch (type) {
+      case "aircraft":
+        return "bg-blue-500"
+      case "drone":
+        return "bg-red-500"
+      case "bird":
+        return "bg-green-500"
+      case "unknown":
+        return "bg-gray-500"
+      default:
+        return "bg-gray-500"
     }
   }
 
@@ -232,8 +183,26 @@ export default function Dashboard() {
     setIsPlaying((prev) => ({ ...prev, [cameraId]: !prev[cameraId] }))
   }
 
-  const toggleMute = (cameraId: string) => {
-    setIsMuted((prev) => ({ ...prev, [cameraId]: !prev[cameraId] }))
+  const handleFullscreen = (cameraId: string) => {
+    setSelectedCamera(cameraId)
+    console.log(`Opening fullscreen view for camera ${cameraId}`)
+  }
+
+  const getLastDetectionForCamera = (cameraId: string) => {
+    return recentDetections.find((det) => det.cameraId === cameraId)
+  }
+
+  const getTimeSince = (timestamp: string) => {
+    const now = new Date()
+    const then = new Date(timestamp)
+    const diffMs = now.getTime() - then.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+
+    if (diffMins < 1) return "Just now"
+    if (diffMins < 60) return `${diffMins} min ago`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours}h ago`
+    return `${Math.floor(diffHours / 24)}d ago`
   }
 
   // Sort detections by timestamp (most recent first) and show top 6
@@ -252,115 +221,119 @@ export default function Dashboard() {
           </Badge>
         </div>
         <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            <span>54 detections today</span>
+            <span>{recentDetections.length} detections today</span>
           </div>
           <div className="flex items-center gap-2">
             <Cloud className="h-4 w-4" />
-            <span>METAR: Clear, 10kt winds</span>
+            <span className="hidden sm:inline">METAR:</span> Clear, 10kt winds
           </div>
         </div>
       </header>
 
       <div className="flex-1 overflow-auto p-4">
         {/* Camera Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-          {cameras.map((camera) => (
-            <Card
-              key={camera.id}
-              className="relative overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">{camera.name}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${getStatusColor(camera.status)}`} />
-                    <Badge
-                      variant="secondary"
-                      className="text-xs font-semibold bg-primary/10 text-primary border-primary/20"
-                    >
-                      {camera.detections}
-                    </Badge>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">{camera.location}</p>
-              </CardHeader>
-
-              <CardContent className="p-0">
-                {/* Video Feed Placeholder */}
-                <div className="relative aspect-video bg-black/20 border border-border/20">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">RTSP Feed</p>
-                      <p className="text-xs text-muted-foreground">
-                        {camera.rtspUrl.split("@")[1]?.split(":")[0] || "Loading..."}
-                      </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+          {cameras.map((camera) => {
+            const lastDetection = getLastDetectionForCamera(camera.id)
+            return (
+              <Card
+                key={camera.id}
+                className="relative overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{camera.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getStatusColor(camera.status)}`} />
                     </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">{camera.location}</p>
+                </CardHeader>
 
-                  {/* Detection Overlay */}
-                  {recentDetections
-                    .filter((det) => det.cameraId === camera.id)
-                    .slice(0, 1) // Show only the most recent detection per camera
-                    .map((detection) => (
+                <CardContent className="p-0">
+                  {/* Video Feed Placeholder */}
+                  <div className="relative aspect-video bg-black/20 border border-border/20">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <Camera className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">RTSP Feed</p>
+                        <p className="text-xs text-muted-foreground">
+                          {camera.rtspUrl.split("@")[1]?.split(":")[0] || "Loading..."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Detection Overlay */}
+                    {lastDetection && (
                       <div
-                        key={detection.id}
                         className="absolute border-2 border-red-500 bg-red-500/20"
                         style={{
-                          left: `${(detection.bbox.x / 640) * 100}%`,
-                          top: `${(detection.bbox.y / 480) * 100}%`,
-                          width: `${(detection.bbox.width / 640) * 100}%`,
-                          height: `${(detection.bbox.height / 480) * 100}%`,
+                          left: `${(lastDetection.bbox.x / 640) * 100}%`,
+                          top: `${(lastDetection.bbox.y / 480) * 100}%`,
+                          width: `${(lastDetection.bbox.width / 640) * 100}%`,
+                          height: `${(lastDetection.bbox.height / 480) * 100}%`,
                         }}
                       >
                         <div className="absolute -top-6 left-0 bg-red-500 text-white text-xs px-1 rounded">
-                          {detection.type} {Math.round(detection.confidence * 100)}%
+                          {lastDetection.type} {Math.round(lastDetection.confidence * 100)}%
                         </div>
                       </div>
-                    ))}
+                    )}
 
-                  {/* Video Controls */}
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
+                    {/* Video Controls */}
+                    <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-6 w-6 p-0"
+                          onClick={() => togglePlayback(camera.id)}
+                        >
+                          {isPlaying[camera.id] ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                        </Button>
+                      </div>
                       <Button
                         size="sm"
                         variant="secondary"
                         className="h-6 w-6 p-0"
-                        onClick={() => togglePlayback(camera.id)}
+                        onClick={() => handleFullscreen(camera.id)}
                       >
-                        {isPlaying[camera.id] ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="h-6 w-6 p-0"
-                        onClick={() => toggleMute(camera.id)}
-                      >
-                        {isMuted[camera.id] ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                        <Maximize className="h-3 w-3" />
                       </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-6 w-6 p-0"
-                      onClick={() => setSelectedCamera(camera.id)}
-                    >
-                      <Maximize className="h-3 w-3" />
-                    </Button>
                   </div>
-                </div>
 
-                <div className="p-3 border-t border-border/20">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Last: {camera.lastDetection || "No recent activity"}</span>
-                    <Badge variant={camera.status === "recording" ? "destructive" : "secondary"}>{camera.status}</Badge>
+                  <div className="p-3 border-t border-border/20">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-muted-foreground">
+                          Last: {lastDetection ? getTimeSince(lastDetection.timestamp) : "No recent activity"}
+                        </span>
+                        {lastDetection && (
+                          <div className="flex items-center ml-2">{getDetectionIcon(lastDetection.type)}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link href="/media">
+                          <Button size="sm" variant="outline" className="h-6 w-6 p-0">
+                            <ImageIcon className="h-3 w-3" />
+                          </Button>
+                        </Link>
+                        <Link href="/media">
+                          <Button size="sm" variant="outline" className="h-6 w-6 p-0">
+                            <Video className="h-3 w-3" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
 
         {/* Recent Detections */}
@@ -386,21 +359,32 @@ export default function Dashboard() {
                 return (
                   <div
                     key={detection.id}
-                    className="flex items-center justify-between p-3 border border-border/20 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-border/20 rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-0">
                       <div className="flex items-center gap-2">
                         {getDetectionIcon(detection.type)}
                         <span className="font-medium capitalize">{detection.type}</span>
                       </div>
                       <Badge variant="outline">{Math.round(detection.confidence * 100)}% confidence</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {camera?.name} • {new Date(detection.timestamp).toLocaleTimeString()}
+                      <span className="text-sm text-muted-foreground hidden sm:inline">
+                        {camera?.name} • {getTimeSince(detection.timestamp)}
                       </span>
                     </div>
-                    <Button size="sm" variant="outline">
-                      View Clip
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Link href="/media">
+                        <Button size="sm" variant="outline">
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Snapshots
+                        </Button>
+                      </Link>
+                      <Link href="/media">
+                        <Button size="sm" variant="outline">
+                          <Video className="h-4 w-4 mr-2" />
+                          View Clip
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 )
               })}

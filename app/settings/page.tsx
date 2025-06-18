@@ -10,63 +10,33 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Camera, Database, Bell, Wifi, Activity, Save, TestTube, Trash2, Plus, Edit } from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
-
-interface CameraConfig {
-  id: string
-  name: string
-  location: string
-  rtspUrl: string
-  status: "online" | "offline" | "error"
-  detectionEnabled: boolean
-  recordingEnabled: boolean
-  confidenceThreshold: number
-  resolution: string
-  fps: number
-}
-
-const mockCameras: CameraConfig[] = [
-  {
-    id: "cam-001",
-    name: "North Perimeter",
-    location: "Runway 09L Approach",
-    rtspUrl: "rtsp://192.168.1.101:554/cam/realmonitor?channel=1&subtype=0",
-    status: "online",
-    detectionEnabled: true,
-    recordingEnabled: true,
-    confidenceThreshold: 0.8,
-    resolution: "1920x1080",
-    fps: 30,
-  },
-  {
-    id: "cam-002",
-    name: "South Tower",
-    location: "Control Tower View",
-    rtspUrl: "rtsp://192.168.1.102:554/cam/realmonitor?channel=1&subtype=0",
-    status: "online",
-    detectionEnabled: true,
-    recordingEnabled: true,
-    confidenceThreshold: 0.85,
-    resolution: "1920x1080",
-    fps: 25,
-  },
-  {
-    id: "cam-003",
-    name: "East Taxiway",
-    location: "Taxiway Alpha",
-    rtspUrl: "rtsp://192.168.1.103:554/cam/realmonitor?channel=1&subtype=0",
-    status: "online",
-    detectionEnabled: true,
-    recordingEnabled: true,
-    confidenceThreshold: 0.75,
-    resolution: "1280x720",
-    fps: 30,
-  },
-]
+import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
+import { useCameraStore } from "@/lib/camera-store"
 
 export default function SystemSettings() {
-  const [cameras, setCameras] = useState<CameraConfig[]>(mockCameras)
+  const { cameras, addCamera, updateCamera, removeCamera, saveChanges } = useCameraStore()
+  const [isAddCameraOpen, setIsAddCameraOpen] = useState(false)
+  const [newCamera, setNewCamera] = useState({
+    name: "",
+    location: "",
+    rtspUrl: "",
+    resolution: "1920x1080",
+    fps: 30,
+  })
   const [globalSettings, setGlobalSettings] = useState({
     detectionEnabled: true,
     recordingEnabled: true,
@@ -86,14 +56,47 @@ export default function SystemSettings() {
       updateInterval: 300,
     },
   })
-
-  const updateCameraConfig = (cameraId: string, updates: Partial<CameraConfig>) => {
-    setCameras((prev) => prev.map((cam) => (cam.id === cameraId ? { ...cam, ...updates } : cam)))
-  }
+  const isHeaderVisible = useAutoHideHeader()
 
   const testCameraConnection = (cameraId: string) => {
-    // Simulate connection test
     console.log(`Testing connection for camera ${cameraId}`)
+  }
+
+  const handleAddCamera = () => {
+    if (!newCamera.name || !newCamera.location || !newCamera.rtspUrl) {
+      return
+    }
+
+    addCamera({
+      name: newCamera.name,
+      location: newCamera.location,
+      rtspUrl: newCamera.rtspUrl,
+      status: "offline",
+      detectionEnabled: true,
+      recordingEnabled: true,
+      confidenceThreshold: 0.8,
+      resolution: newCamera.resolution,
+      fps: newCamera.fps,
+    })
+
+    setNewCamera({
+      name: "",
+      location: "",
+      rtspUrl: "",
+      resolution: "1920x1080",
+      fps: 30,
+    })
+    setIsAddCameraOpen(false)
+  }
+
+  const handleRemoveCamera = (cameraId: string) => {
+    removeCamera(cameraId)
+  }
+
+  const handleSaveChanges = () => {
+    saveChanges()
+    // Show success message or toast
+    console.log("All changes saved successfully")
   }
 
   const getStatusColor = (status: string) => {
@@ -111,45 +114,136 @@ export default function SystemSettings() {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+        } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
+      >
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">System Settings</h1>
           <Badge variant="outline">Configuration Panel</Badge>
         </div>
         <div className="ml-auto">
-          <Button size="sm">
+          <Button size="sm" onClick={handleSaveChanges}>
             <Save className="h-4 w-4 mr-2" />
-            Save All Changes
+            <span className="hidden sm:inline">Save All Changes</span>
+            <span className="sm:hidden">Save</span>
           </Button>
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4 pt-20 md:pt-4">
         <Tabs defaultValue="cameras" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="cameras">Cameras</TabsTrigger>
-            <TabsTrigger value="detection">Detection</TabsTrigger>
-            <TabsTrigger value="storage">Storage</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
-            <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
+            <TabsTrigger value="cameras" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Cameras
+            </TabsTrigger>
+            <TabsTrigger value="detection" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Detection
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Storage
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Integrations
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Alerts
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="cameras" className="mt-6">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Camera Configuration</h2>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Camera
-                </Button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h2 className="text-xl font-semibold">Camera Configuration ({cameras.length} cameras)</h2>
+                <Dialog open={isAddCameraOpen} onOpenChange={setIsAddCameraOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Camera
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Add New Camera</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="camera-name">Camera Name</Label>
+                        <Input
+                          id="camera-name"
+                          value={newCamera.name}
+                          onChange={(e) => setNewCamera((prev) => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g., Main Entrance"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="camera-location">Location</Label>
+                        <Input
+                          id="camera-location"
+                          value={newCamera.location}
+                          onChange={(e) => setNewCamera((prev) => ({ ...prev, location: e.target.value }))}
+                          placeholder="e.g., Building A Entrance"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="camera-rtsp">RTSP URL</Label>
+                        <Input
+                          id="camera-rtsp"
+                          value={newCamera.rtspUrl}
+                          onChange={(e) => setNewCamera((prev) => ({ ...prev, rtspUrl: e.target.value }))}
+                          placeholder="rtsp://192.168.1.100:554/cam/realmonitor"
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="camera-resolution">Resolution</Label>
+                          <Select
+                            value={newCamera.resolution}
+                            onValueChange={(value) => setNewCamera((prev) => ({ ...prev, resolution: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1920x1080">1920x1080 (Full HD)</SelectItem>
+                              <SelectItem value="1280x720">1280x720 (HD)</SelectItem>
+                              <SelectItem value="640x480">640x480 (SD)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="camera-fps">Frame Rate (FPS)</Label>
+                          <Input
+                            id="camera-fps"
+                            type="number"
+                            value={newCamera.fps}
+                            onChange={(e) =>
+                              setNewCamera((prev) => ({ ...prev, fps: Number.parseInt(e.target.value) }))
+                            }
+                            min="1"
+                            max="60"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddCameraOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleAddCamera}>Add Camera</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               <div className="grid gap-6">
                 {cameras.map((camera) => (
                   <Card key={camera.id} className="border-border/50 hover:border-border/70 transition-all duration-200">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <Camera className="h-5 w-5" />
                           <div>
@@ -175,7 +269,7 @@ export default function SystemSettings() {
                           <Input
                             id={`rtsp-${camera.id}`}
                             value={camera.rtspUrl}
-                            onChange={(e) => updateCameraConfig(camera.id, { rtspUrl: e.target.value })}
+                            onChange={(e) => updateCamera(camera.id, { rtspUrl: e.target.value })}
                             className="font-mono text-sm"
                           />
                         </div>
@@ -184,7 +278,7 @@ export default function SystemSettings() {
                           <Label htmlFor={`resolution-${camera.id}`}>Resolution</Label>
                           <Select
                             value={camera.resolution}
-                            onValueChange={(value) => updateCameraConfig(camera.id, { resolution: value })}
+                            onValueChange={(value) => updateCamera(camera.id, { resolution: value })}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -205,7 +299,7 @@ export default function SystemSettings() {
                             id={`fps-${camera.id}`}
                             type="number"
                             value={camera.fps}
-                            onChange={(e) => updateCameraConfig(camera.id, { fps: Number.parseInt(e.target.value) })}
+                            onChange={(e) => updateCamera(camera.id, { fps: Number.parseInt(e.target.value) })}
                             min="1"
                             max="60"
                           />
@@ -216,7 +310,7 @@ export default function SystemSettings() {
                           <div className="px-3">
                             <Slider
                               value={[camera.confidenceThreshold]}
-                              onValueChange={([value]) => updateCameraConfig(camera.id, { confidenceThreshold: value })}
+                              onValueChange={([value]) => updateCamera(camera.id, { confidenceThreshold: value })}
                               max={1}
                               min={0.1}
                               step={0.05}
@@ -236,9 +330,7 @@ export default function SystemSettings() {
                             <Switch
                               id={`detection-${camera.id}`}
                               checked={camera.detectionEnabled}
-                              onCheckedChange={(checked) =>
-                                updateCameraConfig(camera.id, { detectionEnabled: checked })
-                              }
+                              onCheckedChange={(checked) => updateCamera(camera.id, { detectionEnabled: checked })}
                             />
                           </div>
                           <div className="flex items-center justify-between">
@@ -246,15 +338,13 @@ export default function SystemSettings() {
                             <Switch
                               id={`recording-${camera.id}`}
                               checked={camera.recordingEnabled}
-                              onCheckedChange={(checked) =>
-                                updateCameraConfig(camera.id, { recordingEnabled: checked })
-                              }
+                              onCheckedChange={(checked) => updateCamera(camera.id, { recordingEnabled: checked })}
                             />
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-4 border-t">
+                      <div className="flex flex-wrap gap-2 pt-4 border-t">
                         <Button
                           size="sm"
                           variant="outline"
@@ -268,10 +358,36 @@ export default function SystemSettings() {
                           <Activity className="h-4 w-4 mr-2" />
                           View Live Feed
                         </Button>
-                        <Button size="sm" variant="outline" className="text-red-600 border-red-600">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Remove
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Remove
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove Camera</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to remove "{camera.name}"? This action cannot be undone and will
+                                remove all associated recordings and settings.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleRemoveCamera(camera.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Remove Camera
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </CardContent>
                   </Card>
@@ -280,6 +396,7 @@ export default function SystemSettings() {
             </div>
           </TabsContent>
 
+          {/* Other tabs remain the same as before */}
           <TabsContent value="detection" className="mt-6">
             <div className="space-y-6">
               <h2 className="text-xl font-semibold">Detection Settings</h2>
@@ -329,15 +446,37 @@ export default function SystemSettings() {
                     <div className="space-y-4">
                       <h3 className="font-medium">Processing Settings</h3>
                       <div className="space-y-3">
-                        <div>
-                          <Label>Processing Interval (seconds)</Label>
-                          <Input type="number" defaultValue="1" min="0.1" max="10" step="0.1" />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Processing Interval</Label>
+                            <Select defaultValue="1000">
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="500">500ms (High CPU)</SelectItem>
+                                <SelectItem value="1000">1 second</SelectItem>
+                                <SelectItem value="2000">2 seconds</SelectItem>
+                                <SelectItem value="5000">5 seconds</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Batch Size</Label>
+                            <Select defaultValue="4">
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1 frame</SelectItem>
+                                <SelectItem value="2">2 frames</SelectItem>
+                                <SelectItem value="4">4 frames</SelectItem>
+                                <SelectItem value="8">8 frames</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-                        <div>
-                          <Label>Batch Size</Label>
-                          <Input type="number" defaultValue="4" min="1" max="16" />
-                        </div>
-                        <div>
+                        <div className="space-y-2">
                           <Label>Model Version</Label>
                           <Select defaultValue="yolov8n">
                             <SelectTrigger>
@@ -345,8 +484,9 @@ export default function SystemSettings() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="yolov8n">YOLOv8 Nano (Fast)</SelectItem>
-                              <SelectItem value="yolov8s">YOLOv8 Small (Balanced)</SelectItem>
-                              <SelectItem value="yolov8m">YOLOv8 Medium (Accurate)</SelectItem>
+                              <SelectItem value="yolov8s">YOLOv8 Small</SelectItem>
+                              <SelectItem value="yolov8m">YOLOv8 Medium</SelectItem>
+                              <SelectItem value="yolov8l">YOLOv8 Large (Accurate)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -360,100 +500,171 @@ export default function SystemSettings() {
 
           <TabsContent value="storage" className="mt-6">
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold">Storage Management</h2>
+              <h2 className="text-xl font-semibold">NAS Statistics</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Database className="h-5 w-5" />
-                      Storage Configuration
+                      Storage Usage
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="storage-path">Storage Path</Label>
-                      <Input id="storage-path" defaultValue="/mnt/nas/nvr-storage" className="font-mono" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="max-storage">Maximum Storage (GB)</Label>
-                      <Input
-                        id="max-storage"
-                        type="number"
-                        value={globalSettings.maxStorageGB}
-                        onChange={(e) =>
-                          setGlobalSettings((prev) => ({ ...prev, maxStorageGB: Number.parseInt(e.target.value) }))
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="retention">Retention Period (Days)</Label>
-                      <Input
-                        id="retention"
-                        type="number"
-                        value={globalSettings.retentionDays}
-                        onChange={(e) =>
-                          setGlobalSettings((prev) => ({ ...prev, retentionDays: Number.parseInt(e.target.value) }))
-                        }
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Auto Cleanup</Label>
-                        <p className="text-sm text-muted-foreground">Automatically delete old files</p>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Used</span>
+                          <span>780 GB / 1 TB</span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-2">
+                          <div className="bg-primary h-2 rounded-full" style={{ width: "78%" }} />
+                        </div>
                       </div>
-                      <Switch
-                        checked={globalSettings.autoCleanup}
-                        onCheckedChange={(checked) => setGlobalSettings((prev) => ({ ...prev, autoCleanup: checked }))}
-                      />
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Videos</p>
+                          <p className="font-medium">650 GB</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Images</p>
+                          <p className="font-medium">130 GB</p>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Storage Statistics</CardTitle>
+                    <CardTitle>System Resources</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Used Space</span>
-                        <span>780 GB / 1000 GB</span>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>CPU Usage</span>
+                          <span>23%</span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-2">
+                          <div className="bg-blue-500 h-2 rounded-full" style={{ width: "23%" }} />
+                        </div>
                       </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div className="bg-primary h-2 rounded-full" style={{ width: "78%" }}></div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Memory</span>
+                          <span>4.2 GB / 8 GB</span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-2">
+                          <div className="bg-green-500 h-2 rounded-full" style={{ width: "52%" }} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Temperature</p>
+                          <p className="font-medium">42°C</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Network</p>
+                          <p className="font-medium">1.2 Gbps</p>
+                        </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className="text-muted-foreground">Video Files</div>
-                        <div className="font-medium">650 GB</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Images</div>
-                        <div className="font-medium">130 GB</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Total Files</div>
-                        <div className="font-medium">24,567</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Oldest File</div>
-                        <div className="font-medium">28 days</div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>System Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Uptime</span>
+                          <span className="font-medium">15d 4h</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Last Boot</span>
+                          <span className="font-medium">Dec 31, 2023</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Active Cameras</span>
+                          <span className="font-medium">
+                            {cameras.filter((c) => c.status === "online" || c.status === "recording").length}/
+                            {cameras.length}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Recording Status</span>
+                          <Badge variant="outline" className="text-green-500 border-green-500">
+                            Active
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-
-                    <Button className="w-full" variant="outline">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Run Cleanup Now
-                    </Button>
                   </CardContent>
                 </Card>
               </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Retention Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="auto-cleanup">Auto Cleanup</Label>
+                      <p className="text-sm text-muted-foreground">Automatically delete old recordings</p>
+                    </div>
+                    <Switch
+                      id="auto-cleanup"
+                      checked={globalSettings.autoCleanup}
+                      onCheckedChange={(checked) => setGlobalSettings((prev) => ({ ...prev, autoCleanup: checked }))}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Retention Period (Days)</Label>
+                      <div className="px-3">
+                        <Slider
+                          value={[globalSettings.retentionDays]}
+                          onValueChange={([value]) => setGlobalSettings((prev) => ({ ...prev, retentionDays: value }))}
+                          max={365}
+                          min={1}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <span>1 day</span>
+                          <span>{globalSettings.retentionDays} days</span>
+                          <span>365 days</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Max Storage (GB)</Label>
+                      <div className="px-3">
+                        <Slider
+                          value={[globalSettings.maxStorageGB]}
+                          onValueChange={([value]) => setGlobalSettings((prev) => ({ ...prev, maxStorageGB: value }))}
+                          max={5000}
+                          min={100}
+                          step={50}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <span>100 GB</span>
+                          <span>{globalSettings.maxStorageGB} GB</span>
+                          <span>5 TB</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -461,31 +672,32 @@ export default function SystemSettings() {
             <div className="space-y-6">
               <h2 className="text-xl font-semibold">External Integrations</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Wifi className="h-5 w-5" />
-                      ADS-B Integration
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Enable ADS-B Tracking</Label>
-                        <p className="text-sm text-muted-foreground">Track aircraft via ADS-B signals</p>
-                      </div>
-                      <Switch
-                        checked={globalSettings.adsb.enabled}
-                        onCheckedChange={(checked) =>
-                          setGlobalSettings((prev) => ({
-                            ...prev,
-                            adsb: { ...prev.adsb, enabled: checked },
-                          }))
-                        }
-                      />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wifi className="h-5 w-5" />
+                    ADS-B Integration
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="adsb-enabled">Enable ADS-B Tracking</Label>
+                      <p className="text-sm text-muted-foreground">Correlate aircraft detections with ADS-B data</p>
                     </div>
+                    <Switch
+                      id="adsb-enabled"
+                      checked={globalSettings.adsb.enabled}
+                      onCheckedChange={(checked) =>
+                        setGlobalSettings((prev) => ({
+                          ...prev,
+                          adsb: { ...prev.adsb, enabled: checked },
+                        }))
+                      }
+                    />
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="adsb-host">ADS-B Host</Label>
                       <Input
@@ -497,9 +709,9 @@ export default function SystemSettings() {
                             adsb: { ...prev.adsb, host: e.target.value },
                           }))
                         }
+                        placeholder="localhost"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="adsb-port">Port</Label>
                       <Input
@@ -512,55 +724,59 @@ export default function SystemSettings() {
                             adsb: { ...prev.adsb, port: Number.parseInt(e.target.value) },
                           }))
                         }
+                        placeholder="30003"
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="adsb-range">Tracking Range (km)</Label>
-                      <Input
-                        id="adsb-range"
-                        type="number"
-                        value={globalSettings.adsb.range}
-                        onChange={(e) =>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tracking Range (km)</Label>
+                    <div className="px-3">
+                      <Slider
+                        value={[globalSettings.adsb.range]}
+                        onValueChange={([value]) =>
                           setGlobalSettings((prev) => ({
                             ...prev,
-                            adsb: { ...prev.adsb, range: Number.parseInt(e.target.value) },
+                            adsb: { ...prev.adsb, range: value },
                           }))
                         }
+                        max={200}
+                        min={10}
+                        step={5}
+                        className="w-full"
                       />
-                    </div>
-
-                    <Button className="w-full" variant="outline">
-                      <TestTube className="h-4 w-4 mr-2" />
-                      Test Connection
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Activity className="h-5 w-5" />
-                      Weather Integration
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Enable Weather Data</Label>
-                        <p className="text-sm text-muted-foreground">Fetch METAR weather data</p>
+                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                        <span>10 km</span>
+                        <span>{globalSettings.adsb.range} km</span>
+                        <span>200 km</span>
                       </div>
-                      <Switch
-                        checked={globalSettings.weather.enabled}
-                        onCheckedChange={(checked) =>
-                          setGlobalSettings((prev) => ({
-                            ...prev,
-                            weather: { ...prev.weather, enabled: checked },
-                          }))
-                        }
-                      />
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle>Weather Integration</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="weather-enabled">Enable Weather Data</Label>
+                      <p className="text-sm text-muted-foreground">Fetch METAR data for correlation</p>
+                    </div>
+                    <Switch
+                      id="weather-enabled"
+                      checked={globalSettings.weather.enabled}
+                      onCheckedChange={(checked) =>
+                        setGlobalSettings((prev) => ({
+                          ...prev,
+                          weather: { ...prev.weather, enabled: checked },
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="weather-station">METAR Station</Label>
                       <Input
@@ -573,9 +789,9 @@ export default function SystemSettings() {
                           }))
                         }
                         placeholder="KJFK"
+                        className="uppercase"
                       />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="weather-interval">Update Interval (seconds)</Label>
                       <Input
@@ -588,16 +804,12 @@ export default function SystemSettings() {
                             weather: { ...prev.weather, updateInterval: Number.parseInt(e.target.value) },
                           }))
                         }
+                        placeholder="300"
                       />
                     </div>
-
-                    <Button className="w-full" variant="outline">
-                      <TestTube className="h-4 w-4 mr-2" />
-                      Test Weather API
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -609,59 +821,58 @@ export default function SystemSettings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bell className="h-5 w-5" />
-                    Notification Settings
+                    Alert Settings
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label>Enable Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Master switch for all notifications</p>
+                      <Label htmlFor="alerts-enabled">Enable Alerts</Label>
+                      <p className="text-sm text-muted-foreground">Master switch for all alert notifications</p>
                     </div>
                     <Switch
+                      id="alerts-enabled"
                       checked={globalSettings.alertsEnabled}
                       onCheckedChange={(checked) => setGlobalSettings((prev) => ({ ...prev, alertsEnabled: checked }))}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Alert Types</h3>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label>Detection Alerts</Label>
-                          <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>System Alerts</Label>
-                          <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Security Alerts</Label>
-                          <Switch defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Weather Alerts</Label>
-                          <Switch />
-                        </div>
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Alert Types</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Aircraft Detection</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Drone Detection</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>System Errors</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Storage Warnings</Label>
+                        <Switch defaultChecked />
                       </div>
                     </div>
+                  </div>
 
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Notification Methods</h3>
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email Notifications</Label>
-                          <Input id="email" type="email" placeholder="admin@example.com" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="webhook">Webhook URL</Label>
-                          <Input id="webhook" placeholder="https://hooks.slack.com/..." />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="telegram">Telegram Bot Token</Label>
-                          <Input id="telegram" placeholder="Bot token for Telegram notifications" />
-                        </div>
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Notification Methods</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Email Notifications</Label>
+                        <Switch />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Webhook Integration</Label>
+                        <Switch />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Push Notifications</Label>
+                        <Switch defaultChecked />
                       </div>
                     </div>
                   </div>

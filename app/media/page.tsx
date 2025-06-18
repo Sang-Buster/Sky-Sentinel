@@ -7,8 +7,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Video, ImageIcon, Download, Play, Filter, Search, Plane, Activity, Loader2 } from "lucide-react"
+import {
+  Video,
+  ImageIcon,
+  Download,
+  Play,
+  Filter,
+  Search,
+  Plane,
+  DrillIcon as Drone,
+  Bird,
+  HelpCircle,
+  Loader2,
+} from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
 
 interface MediaItem {
   id: string
@@ -75,6 +88,7 @@ export default function MediaLibrary() {
   const [selectedType, setSelectedType] = useState<string>("all")
   const [selectedDetection, setSelectedDetection] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("newest")
+  const isHeaderVisible = useAutoHideHeader()
 
   // Infinite scroll state
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
@@ -169,9 +183,13 @@ export default function MediaLibrary() {
       case "aircraft":
         return <Plane className="h-4 w-4" />
       case "drone":
-        return <Activity className="h-4 w-4" />
+        return <Drone className="h-4 w-4" />
+      case "bird":
+        return <Bird className="h-4 w-4" />
+      case "unknown":
+        return <HelpCircle className="h-4 w-4" />
       default:
-        return <Activity className="h-4 w-4" />
+        return <HelpCircle className="h-4 w-4" />
     }
   }
 
@@ -183,6 +201,8 @@ export default function MediaLibrary() {
         return "bg-red-500 hover:bg-red-600"
       case "bird":
         return "bg-green-500 hover:bg-green-600"
+      case "unknown":
+        return "bg-gray-500 hover:bg-gray-600"
       default:
         return "bg-gray-500 hover:bg-gray-600"
     }
@@ -193,16 +213,20 @@ export default function MediaLibrary() {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+        } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
+      >
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2 flex-1">
           <h1 className="text-lg font-semibold">Media Library</h1>
           <Badge variant="outline">{sortedItems.length}+ items</Badge>
         </div>
 
-        {/* Storage Status Indicator */}
+        {/* Storage Status Indicator - More compact for mobile */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
             <span>NAS Storage:</span>
             <div className="flex items-center gap-2">
               <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
@@ -220,17 +244,17 @@ export default function MediaLibrary() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4 pt-20 md:pt-4">
         {/* Filters */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+          <CardHeader className="py-3 px-4 sm:px-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
               Filters & Search
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <CardContent className="px-4 py-3 sm:px-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
               <div className="lg:col-span-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -301,14 +325,20 @@ export default function MediaLibrary() {
 
         {/* Media Tabs */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All Media ({sortedItems.length}+)</TabsTrigger>
-            <TabsTrigger value="videos">Videos ({videoItems.length}+)</TabsTrigger>
-            <TabsTrigger value="images">Images ({imageItems.length}+)</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              All Media ({sortedItems.length}+)
+            </TabsTrigger>
+            <TabsTrigger value="videos" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Videos ({videoItems.length}+)
+            </TabsTrigger>
+            <TabsTrigger value="images" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              Images ({imageItems.length}+)
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {sortedItems.map((item) => (
                 <MediaCard key={item.id} item={item} />
               ))}
@@ -325,7 +355,7 @@ export default function MediaLibrary() {
           </TabsContent>
 
           <TabsContent value="videos" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {videoItems.map((item) => (
                 <MediaCard key={item.id} item={item} />
               ))}
@@ -333,7 +363,7 @@ export default function MediaLibrary() {
           </TabsContent>
 
           <TabsContent value="images" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {imageItems.map((item) => (
                 <MediaCard key={item.id} item={item} />
               ))}
@@ -351,9 +381,13 @@ function MediaCard({ item }: { item: MediaItem }) {
       case "aircraft":
         return <Plane className="h-4 w-4" />
       case "drone":
-        return <Activity className="h-4 w-4" />
+        return <Drone className="h-4 w-4" />
+      case "bird":
+        return <Bird className="h-4 w-4" />
+      case "unknown":
+        return <HelpCircle className="h-4 w-4" />
       default:
-        return <Activity className="h-4 w-4" />
+        return <HelpCircle className="h-4 w-4" />
     }
   }
 
@@ -365,6 +399,8 @@ function MediaCard({ item }: { item: MediaItem }) {
         return "bg-red-500 hover:bg-red-600"
       case "bird":
         return "bg-green-500 hover:bg-green-600"
+      case "unknown":
+        return "bg-gray-500 hover:bg-gray-600"
       default:
         return "bg-gray-500 hover:bg-gray-600"
     }

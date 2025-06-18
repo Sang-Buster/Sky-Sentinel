@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Search, Send, Plane, Activity, Clock, Camera, Play, Download, Sparkles } from "lucide-react"
+import { Search, Send, Plane, Activity, Clock, Camera, Play, Download, Sparkles, Bird, HelpCircle } from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
 
 interface SearchResult {
   id: string
@@ -89,6 +89,20 @@ export default function AISearch() {
     },
   ])
   const [isLoading, setIsLoading] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isHeaderVisible = useAutoHideHeader()
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.style.height = "auto"
+      const scrollHeight = textarea.scrollHeight
+      const maxHeight = 120 // Max height in pixels (about 5 lines)
+      textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`
+      textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden"
+    }
+  }, [query])
 
   const handleSearch = async () => {
     if (!query.trim()) return
@@ -129,6 +143,10 @@ export default function AISearch() {
         return <Plane className="h-4 w-4" />
       case "drone":
         return <Activity className="h-4 w-4" />
+      case "bird":
+        return <Bird className="h-4 w-4" />
+      case "unknown":
+        return <HelpCircle className="h-4 w-4" />
       default:
         return <Activity className="h-4 w-4" />
     }
@@ -142,6 +160,8 @@ export default function AISearch() {
         return "bg-red-500"
       case "bird":
         return "bg-green-500"
+      case "unknown":
+        return "bg-gray-500"
       default:
         return "bg-gray-500"
     }
@@ -149,7 +169,11 @@ export default function AISearch() {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+        } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
+      >
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">AI Search</h1>
@@ -158,10 +182,12 @@ export default function AISearch() {
             Semantic Search
           </Badge>
         </div>
-        <div className="ml-auto text-sm text-muted-foreground">Ask questions about your surveillance data</div>
+        <div className="ml-auto text-sm text-muted-foreground hidden sm:block">
+          Ask questions about your surveillance data
+        </div>
       </header>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden pt-20 md:pt-0">
         {/* Chat Messages */}
         <div className="flex-1 overflow-auto p-4">
           <div className="max-w-4xl mx-auto space-y-4">
@@ -283,9 +309,10 @@ export default function AISearch() {
         {/* Search Input */}
         <div className="p-4 border-t border-border/40">
           <div className="max-w-4xl mx-auto">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <Textarea
+            <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                <textarea
+                  ref={textareaRef}
                   placeholder="Ask me anything about your surveillance data... (e.g., 'Show me all aircraft detections from today')"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -295,17 +322,15 @@ export default function AISearch() {
                       handleSearch()
                     }
                   }}
-                  className="min-h-[60px] resize-none pr-12"
+                  className="w-full h-12 min-h-[48px] max-h-[120px] resize-none rounded-md border border-input bg-background px-3 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{
+                    lineHeight: "1.4",
+                  }}
                 />
-                <Button
-                  size="sm"
-                  className="absolute bottom-2 right-2"
-                  onClick={handleSearch}
-                  disabled={!query.trim() || isLoading}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
               </div>
+              <Button size="default" onClick={handleSearch} disabled={!query.trim() || isLoading} className="h-12 px-4">
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Press Enter to send, Shift+Enter for new line</p>
           </div>

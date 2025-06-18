@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   AlertTriangle,
   Bell,
@@ -18,8 +19,12 @@ import {
   XCircle,
   Eye,
   Settings,
+  DrillIcon as Drone,
+  Bird,
+  HelpCircle,
 } from "lucide-react"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { useAutoHideHeader } from "@/hooks/use-auto-hide-header"
 
 interface Alert {
   id: string
@@ -107,6 +112,9 @@ export default function AlertsPanel() {
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [selectedSeverity, setSelectedSeverity] = useState<string>("all")
+  const [activeTab, setActiveTab] = useState<string>("active")
+  const [showUnacknowledgedOnly, setShowUnacknowledgedOnly] = useState(false)
+  const isHeaderVisible = useAutoHideHeader()
 
   useEffect(() => {
     // Simulate new alerts
@@ -183,7 +191,11 @@ export default function AlertsPanel() {
       case "aircraft":
         return <Plane className="h-4 w-4" />
       case "drone":
-        return <Activity className="h-4 w-4" />
+        return <Drone className="h-4 w-4" />
+      case "bird":
+        return <Bird className="h-4 w-4" />
+      case "unknown":
+        return <HelpCircle className="h-4 w-4" />
       default:
         return <Activity className="h-4 w-4" />
     }
@@ -199,18 +211,72 @@ export default function AlertsPanel() {
     )
   }
 
-  const filteredAlerts = alerts.filter((alert) => {
-    if (selectedSeverity === "all") return true
-    return alert.severity === selectedSeverity
-  })
+  // Calculate alert counts
+  const activeAlerts = alerts.filter((alert) => !alert.resolved)
+  const resolvedAlerts = alerts.filter((alert) => alert.resolved)
+  const unacknowledgedAlerts = alerts.filter((alert) => !alert.acknowledged)
 
-  const activeAlerts = filteredAlerts.filter((alert) => !alert.resolved)
-  const resolvedAlerts = filteredAlerts.filter((alert) => alert.resolved)
-  const unacknowledgedAlerts = filteredAlerts.filter((alert) => !alert.acknowledged)
+  // Filter alerts based on severity, tab, and unacknowledged filter
+  const getFilteredAlerts = () => {
+    let filtered = alerts
+
+    // Filter by severity
+    if (selectedSeverity !== "all") {
+      filtered = filtered.filter((alert) => alert.severity === selectedSeverity)
+    }
+
+    // Filter by tab
+    switch (activeTab) {
+      case "active":
+        filtered = filtered.filter((alert) => !alert.resolved)
+        // Apply unacknowledged filter only for active tab
+        if (showUnacknowledgedOnly) {
+          filtered = filtered.filter((alert) => !alert.acknowledged)
+        }
+        break
+      case "resolved":
+        filtered = filtered.filter((alert) => alert.resolved)
+        break
+      case "all":
+      default:
+        // Show all alerts
+        break
+    }
+
+    return filtered
+  }
+
+  // Handle card click to set active tab and filters
+  const handleFilterCardClick = (filter: string) => {
+    switch (filter) {
+      case "active":
+        setActiveTab("active")
+        setShowUnacknowledgedOnly(false)
+        break
+      case "unacknowledged":
+        setActiveTab("active")
+        setShowUnacknowledgedOnly(true)
+        break
+      case "resolved":
+        setActiveTab("resolved")
+        setShowUnacknowledgedOnly(false)
+        break
+      case "total":
+        setActiveTab("all")
+        setShowUnacknowledgedOnly(false)
+        break
+    }
+  }
+
+  const filteredAlerts = getFilteredAlerts()
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4">
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 md:relative md:top-auto md:left-auto md:right-auto md:z-auto transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"
+        } flex h-16 shrink-0 items-center gap-2 border-b border-border/40 px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`}
+      >
         <SidebarTrigger className="-ml-1" />
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">Alerts Panel</h1>
@@ -220,28 +286,22 @@ export default function AlertsPanel() {
         </div>
         <div className="ml-auto flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Notifications</span>
+            <span className="text-sm text-muted-foreground hidden sm:inline">Notifications</span>
             <Switch checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
             {notificationsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
           </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-4">
-        {/* Alert Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Alerts</CardTitle>
-              <Bell className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{alerts.length}</div>
-              <p className="text-xs text-muted-foreground">Last 24 hours</p>
-            </CardContent>
-          </Card>
-
-          <Card>
+      <div className="flex-1 overflow-auto p-4 pt-20 md:pt-4">
+        {/* Alert Statistics - Reordered: Active, Unacknowledged, Resolved, Total */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <Card
+            className={`cursor-pointer transition-all ${
+              activeTab === "active" && !showUnacknowledgedOnly ? "ring-2 ring-primary" : "hover:bg-muted/50"
+            }`}
+            onClick={() => handleFilterCardClick("active")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active</CardTitle>
               <AlertTriangle className="h-4 w-4 text-orange-500" />
@@ -252,7 +312,12 @@ export default function AlertsPanel() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className={`cursor-pointer transition-all ${
+              activeTab === "active" && showUnacknowledgedOnly ? "ring-2 ring-primary" : "hover:bg-muted/50"
+            }`}
+            onClick={() => handleFilterCardClick("unacknowledged")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Unacknowledged</CardTitle>
               <XCircle className="h-4 w-4 text-red-500" />
@@ -263,7 +328,12 @@ export default function AlertsPanel() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            className={`cursor-pointer transition-all ${
+              activeTab === "resolved" ? "ring-2 ring-primary" : "hover:bg-muted/50"
+            }`}
+            onClick={() => handleFilterCardClick("resolved")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Resolved</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-500" />
@@ -273,47 +343,82 @@ export default function AlertsPanel() {
               <p className="text-xs text-muted-foreground">Completed</p>
             </CardContent>
           </Card>
+
+          <Card
+            className={`cursor-pointer transition-all ${
+              activeTab === "all" ? "ring-2 ring-primary" : "hover:bg-muted/50"
+            }`}
+            onClick={() => handleFilterCardClick("total")}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Alerts</CardTitle>
+              <Bell className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{alerts.length}</div>
+              <p className="text-xs text-muted-foreground">Last 24 hours</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Alert Tabs */}
-        <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Active Alerts ({activeAlerts.length})</TabsTrigger>
-            <TabsTrigger value="all">All Alerts ({alerts.length})</TabsTrigger>
-            <TabsTrigger value="resolved">Resolved ({resolvedAlerts.length})</TabsTrigger>
-          </TabsList>
+        {/* Alert Tabs with Severity Filter */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <TabsList className="grid w-full grid-cols-3 h-auto lg:flex-1 lg:grid-cols-3">
+              <TabsTrigger value="active" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+                Active Alerts ({activeAlerts.length})
+              </TabsTrigger>
+              <TabsTrigger value="resolved" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+                Resolved ({resolvedAlerts.length})
+              </TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+                All Alerts ({alerts.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <Select value={selectedSeverity} onValueChange={setSelectedSeverity}>
+              <SelectTrigger className="w-full lg:w-[200px]">
+                <SelectValue placeholder="All Severities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Severities</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <TabsContent value="active" className="mt-6">
             <div className="space-y-4">
-              {activeAlerts.length === 0 ? (
+              {filteredAlerts.length === 0 ? (
                 <Card>
                   <CardContent className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                      <h3 className="text-lg font-medium mb-2">No Active Alerts</h3>
-                      <p className="text-muted-foreground">All alerts have been resolved</p>
+                      <h3 className="text-lg font-medium mb-2">
+                        {showUnacknowledgedOnly ? "No Unacknowledged Alerts" : "No Active Alerts"}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {showUnacknowledgedOnly
+                          ? "All active alerts have been acknowledged"
+                          : "All alerts have been resolved"}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
               ) : (
-                activeAlerts.map((alert) => (
+                filteredAlerts.map((alert) => (
                   <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
                 ))
               )}
             </div>
           </TabsContent>
 
-          <TabsContent value="all" className="mt-6">
-            <div className="space-y-4">
-              {filteredAlerts.map((alert) => (
-                <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
-              ))}
-            </div>
-          </TabsContent>
-
           <TabsContent value="resolved" className="mt-6">
             <div className="space-y-4">
-              {resolvedAlerts.length === 0 ? (
+              {filteredAlerts.length === 0 ? (
                 <Card>
                   <CardContent className="flex items-center justify-center py-12">
                     <div className="text-center">
@@ -324,7 +429,27 @@ export default function AlertsPanel() {
                   </CardContent>
                 </Card>
               ) : (
-                resolvedAlerts.map((alert) => (
+                filteredAlerts.map((alert) => (
+                  <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="all" className="mt-6">
+            <div className="space-y-4">
+              {filteredAlerts.length === 0 ? (
+                <Card>
+                  <CardContent className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="text-lg font-medium mb-2">No Alerts Found</h3>
+                      <p className="text-muted-foreground">Try changing your filters</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredAlerts.map((alert) => (
                   <AlertCard key={alert.id} alert={alert} onAcknowledge={acknowledgeAlert} onResolve={resolveAlert} />
                 ))
               )}
@@ -395,7 +520,11 @@ function AlertCard({
       case "aircraft":
         return <Plane className="h-4 w-4" />
       case "drone":
-        return <Activity className="h-4 w-4" />
+        return <Drone className="h-4 w-4" />
+      case "bird":
+        return <Bird className="h-4 w-4" />
+      case "unknown":
+        return <HelpCircle className="h-4 w-4" />
       default:
         return <Activity className="h-4 w-4" />
     }
@@ -404,22 +533,22 @@ function AlertCard({
   return (
     <Card className={`${getSeverityColor(alert.severity)} ${alert.resolved ? "opacity-60" : ""}`}>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               {getTypeIcon(alert.type)}
-              <Badge className={`${getSeverityBadgeColor(alert.severity)} text-white`}>
+              <Badge className={`${getSeverityBadgeColor(alert.severity)} text-white text-xs`}>
                 {alert.severity.toUpperCase()}
               </Badge>
             </div>
             {alert.detectionType && (
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-xs">
                 {getDetectionIcon(alert.detectionType)}
                 <span className="ml-1 capitalize">{alert.detectionType}</span>
               </Badge>
             )}
             {alert.resolved && (
-              <Badge className="bg-green-500 text-white">
+              <Badge className="bg-green-500 text-white text-xs">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Resolved
               </Badge>
@@ -427,7 +556,7 @@ function AlertCard({
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            {new Date(alert.timestamp).toLocaleString()}
+            <span className="text-xs sm:text-sm">{new Date(alert.timestamp).toLocaleString()}</span>
           </div>
         </div>
       </CardHeader>
@@ -435,26 +564,26 @@ function AlertCard({
       <CardContent>
         <div className="space-y-3">
           <div>
-            <h3 className="font-medium">{alert.title}</h3>
+            <h3 className="font-medium text-sm sm:text-base">{alert.title}</h3>
             <p className="text-sm text-muted-foreground mt-1">{alert.description}</p>
           </div>
 
           {alert.cameraName && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
               <Camera className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Camera:</span>
               <span className="font-medium">{alert.cameraName}</span>
               {alert.confidence && (
-                <Badge variant="outline" className="ml-2">
+                <Badge variant="outline" className="text-xs">
                   {Math.round(alert.confidence * 100)}% confidence
                 </Badge>
               )}
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
             {!alert.acknowledged && (
-              <Button size="sm" variant="outline" onClick={() => onAcknowledge(alert.id)}>
+              <Button size="sm" variant="outline" onClick={() => onAcknowledge(alert.id)} className="text-xs">
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Acknowledge
               </Button>
@@ -464,13 +593,13 @@ function AlertCard({
                 size="sm"
                 variant="outline"
                 onClick={() => onResolve(alert.id)}
-                className="text-green-600 border-green-600 hover:bg-green-50"
+                className="text-green-600 border-green-600 hover:bg-green-50 text-xs"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Resolve
               </Button>
             )}
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" className="text-xs">
               <Eye className="h-4 w-4 mr-2" />
               View Details
             </Button>
