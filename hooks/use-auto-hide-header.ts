@@ -20,29 +20,11 @@ export function useAutoHideHeader() {
       setLastScrollY(currentScrollY)
     }
 
-    // Only add scroll listener on mobile
-    const mediaQuery = window.matchMedia("(max-width: 768px)")
-
-    if (mediaQuery.matches) {
-      window.addEventListener("scroll", handleScroll, { passive: true })
-    } else {
-      setIsVisible(true) // Always visible on desktop
-    }
-
-    const handleResize = () => {
-      if (window.matchMedia("(max-width: 768px)").matches) {
-        window.addEventListener("scroll", handleScroll, { passive: true })
-      } else {
-        window.removeEventListener("scroll", handleScroll)
-        setIsVisible(true)
-      }
-    }
-
-    window.addEventListener("resize", handleResize)
+    // Add scroll listener for both mobile and desktop
+    window.addEventListener("scroll", handleScroll, { passive: true })
 
     return () => {
       window.removeEventListener("scroll", handleScroll)
-      window.removeEventListener("resize", handleResize)
     }
   }, [lastScrollY])
 

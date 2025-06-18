@@ -1,20 +1,5 @@
 "use client"
-import {
-  Activity,
-  AlertTriangle,
-  Camera,
-  Database,
-  Home,
-  Search,
-  Settings,
-  Video,
-  BarChart3,
-  Cpu,
-  MemoryStick,
-  Wifi,
-  Clock,
-} from "lucide-react"
-import { useState, useEffect } from "react"
+import { Activity, AlertTriangle, Camera, Database, Home, Search, Settings, Video, BarChart3 } from "lucide-react"
 
 import {
   Sidebar,
@@ -71,106 +56,52 @@ const menuItems = [
   },
 ]
 
+const statusItems = [
+  {
+    title: "System Status",
+    icon: Activity,
+    status: "Online",
+    color: "text-green-500",
+  },
+  {
+    title: "Storage",
+    icon: Database,
+    status: "78% Used",
+    color: "text-yellow-500",
+  },
+  {
+    title: "Active Cameras",
+    icon: Camera,
+    status: `${Math.floor(Math.random() * 2) + 7}/8`, // Dynamic count between 7-8
+    color: "text-green-500",
+  },
+]
+
+const additionalStatusItems = [
+  {
+    title: "CPU Usage",
+    value: "23%",
+    color: "text-blue-500",
+  },
+  {
+    title: "Memory",
+    value: "4.2/8 GB",
+    color: "text-blue-500",
+  },
+  {
+    title: "Network",
+    value: "1.2 Gbps",
+    color: "text-green-500",
+  },
+  {
+    title: "Uptime",
+    value: "15d 4h",
+    color: "text-green-500",
+  },
+]
+
 export function AppSidebar() {
   const pathname = usePathname()
-  const [systemStats, setSystemStats] = useState({
-    systemStatus: "Online",
-    storageUsed: 78,
-    activeCameras: 7,
-    totalCameras: 8,
-    cpuUsage: 23,
-    memoryUsed: 4.2,
-    memoryTotal: 8,
-    networkSpeed: 1.2,
-    uptimeDays: 15,
-    uptimeHours: 4,
-  })
-
-  // Simulate dynamic updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSystemStats((prev) => ({
-        ...prev,
-        cpuUsage: Math.floor(Math.random() * 40) + 15, // 15-55%
-        memoryUsed: Math.round((Math.random() * 2 + 3.5) * 10) / 10, // 3.5-5.5 GB
-        networkSpeed: Math.round((Math.random() * 0.8 + 0.8) * 10) / 10, // 0.8-1.6 Gbps
-        activeCameras: Math.floor(Math.random() * 2) + 7, // 7-8
-        storageUsed: Math.floor(Math.random() * 5) + 76, // 76-80%
-      }))
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const getStatusColor = (type: string, value: number) => {
-    switch (type) {
-      case "system":
-        return systemStats.systemStatus === "Online" ? "text-green-500" : "text-red-500"
-      case "storage":
-        return value > 85 ? "text-red-500" : value > 70 ? "text-yellow-500" : "text-green-500"
-      case "cameras":
-        return value === systemStats.totalCameras ? "text-green-500" : "text-yellow-500"
-      case "cpu":
-        return value > 80 ? "text-red-500" : value > 50 ? "text-yellow-500" : "text-blue-500"
-      case "memory":
-        const memoryPercent = (value / systemStats.memoryTotal) * 100
-        return memoryPercent > 85 ? "text-red-500" : memoryPercent > 70 ? "text-yellow-500" : "text-blue-500"
-      case "network":
-        return value > 1.0 ? "text-green-500" : "text-yellow-500"
-      case "uptime":
-        return "text-green-500"
-      default:
-        return "text-muted-foreground"
-    }
-  }
-
-  const statusItems = [
-    {
-      title: "System Status",
-      icon: Activity,
-      status: systemStats.systemStatus,
-      color: getStatusColor("system", 0),
-    },
-    {
-      title: "Storage",
-      icon: Database,
-      status: `${systemStats.storageUsed}% Used`,
-      color: getStatusColor("storage", systemStats.storageUsed),
-    },
-    {
-      title: "Active Cameras",
-      icon: Camera,
-      status: `${systemStats.activeCameras}/${systemStats.totalCameras}`,
-      color: getStatusColor("cameras", systemStats.activeCameras),
-    },
-  ]
-
-  const additionalStatusItems = [
-    {
-      title: "CPU Usage",
-      icon: Cpu,
-      value: `${systemStats.cpuUsage}%`,
-      color: getStatusColor("cpu", systemStats.cpuUsage),
-    },
-    {
-      title: "Memory",
-      icon: MemoryStick,
-      value: `${systemStats.memoryUsed}/${systemStats.memoryTotal} GB`,
-      color: getStatusColor("memory", systemStats.memoryUsed),
-    },
-    {
-      title: "Network",
-      icon: Wifi,
-      value: `${systemStats.networkSpeed} Gbps`,
-      color: getStatusColor("network", systemStats.networkSpeed),
-    },
-    {
-      title: "Uptime",
-      icon: Clock,
-      value: `${systemStats.uptimeDays}d ${systemStats.uptimeHours}h`,
-      color: getStatusColor("uptime", 0),
-    },
-  ]
 
   return (
     <Sidebar variant="inset" className="border-r border-border/40">
@@ -221,7 +152,6 @@ export function AppSidebar() {
               {additionalStatusItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton className="flex items-center gap-2 pl-6">
-                    <item.icon className="h-4 w-4 shrink-0" />
                     <span className="flex-1 truncate text-sm text-muted-foreground">{item.title}</span>
                     <span className={`text-xs ${item.color}`}>{item.value}</span>
                   </SidebarMenuButton>

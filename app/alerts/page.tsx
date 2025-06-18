@@ -382,10 +382,18 @@ export default function AlertsPanel() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Severities</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="critical" className="text-red-500">
+                  Critical
+                </SelectItem>
+                <SelectItem value="high" className="text-orange-500">
+                  High
+                </SelectItem>
+                <SelectItem value="medium" className="text-yellow-500">
+                  Medium
+                </SelectItem>
+                <SelectItem value="low" className="text-blue-500">
+                  Low
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
