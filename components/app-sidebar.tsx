@@ -58,7 +58,7 @@ const menuItems = [
     description: 'Semantic object search and queries',
   },
   {
-    title: 'Alerts',
+    title: 'Alerts Panel',
     url: '/alerts',
     icon: AlertTriangle,
     description: 'Real-time notifications and events',
@@ -230,7 +230,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton className="flex items-center gap-2">
                     <item.icon className="h-4 w-4 shrink-0" />
-                    <span className="flex-1 truncate text-sm text-muted-foreground">
+                    <span className="flex-1 truncate text-sm">
                       {item.title}
                     </span>
                     <span className={`text-xs ${item.color}`}>{item.value}</span>

@@ -76,7 +76,7 @@ export default function SystemSettings() {
     },
     weather: {
       enabled: true,
-      station: 'KJFK',
+      station: 'KDAB',
       updateInterval: 300,
     },
   });
@@ -776,7 +776,7 @@ export default function SystemSettings() {
                             weather: { ...prev.weather, station: e.target.value },
                           }))
                         }
-                        placeholder="KJFK"
+                        placeholder="KDAB"
                       />
                     </div>
 

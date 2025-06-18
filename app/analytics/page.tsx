@@ -164,7 +164,7 @@ const mockAircraftData: AircraftData[] = [
 ];
 
 const mockWeatherData: WeatherData = {
-  station: 'KJFK',
+  station: 'KDAB',
   timestamp: '2024-01-15T14:35:00Z',
   temperature_c: 12,
   dewpoint_c: 8,
@@ -175,7 +175,7 @@ const mockWeatherData: WeatherData = {
   visibility_km: 16,
   ceiling_ft: 2500,
   conditions: 'Few Clouds',
-  raw_metar: 'KJFK 151435Z 27010KT 10SM FEW025 12/08 A2992 RMK AO2',
+  raw_metar: 'KDAB 151435Z 27010KT 10SM FEW025 12/08 A2992 RMK AO2',
 };
 
 export default function AnalyticsHub() {
