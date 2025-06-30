@@ -1,6 +1,5 @@
 'use client';
 import {
-  Activity,
   AlertTriangle,
   Camera,
   Database,
@@ -74,7 +73,6 @@ const menuItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const [systemStats, setSystemStats] = useState({
-    systemStatus: 'Online',
     storageUsed: 78,
     activeCameras: 7,
     totalCameras: 8,
@@ -104,37 +102,55 @@ export function AppSidebar() {
 
   const getStatusColor = (type: string, value: number) => {
     switch (type) {
-      case 'system':
-        return systemStats.systemStatus === 'Online' ? 'text-green-500' : 'text-red-500';
       case 'storage':
-        return value > 85 ? 'text-red-500' : value > 70 ? 'text-yellow-500' : 'text-green-500';
+        if (value > 90) {
+          return 'text-red-500'; // Critical: > 90% used
+        } else if (value > 70) {
+          return 'text-yellow-500'; // Warning: 70-90% used
+        } else {
+          return 'text-green-500'; // Good: < 70% used
+        }
       case 'cameras':
-        return value === systemStats.totalCameras ? 'text-green-500' : 'text-yellow-500';
+        if (value === systemStats.totalCameras) {
+          return 'text-green-500'; // All cameras online
+        } else if (value <= Math.floor(systemStats.totalCameras / 2)) {
+          return 'text-red-500'; // Half or fewer cameras online
+        } else {
+          return 'text-yellow-500'; // More than half but not all cameras online
+        }
       case 'cpu':
-        return value > 80 ? 'text-red-500' : value > 50 ? 'text-yellow-500' : 'text-blue-500';
+        if (value > 80) {
+          return 'text-red-500'; // Critical: > 80% usage
+        } else if (value > 50) {
+          return 'text-yellow-500'; // Warning: 50-80% usage
+        } else {
+          return 'text-green-500'; // Good: < 50% usage
+        }
       case 'memory':
         const memoryPercent = (value / systemStats.memoryTotal) * 100;
-        return memoryPercent > 85
-          ? 'text-red-500'
-          : memoryPercent > 70
-            ? 'text-yellow-500'
-            : 'text-blue-500';
+        if (memoryPercent > 85) {
+          return 'text-red-500'; // Critical: > 85% usage
+        } else if (memoryPercent > 70) {
+          return 'text-yellow-500'; // Warning: 70-85% usage
+        } else {
+          return 'text-green-500'; // Good: < 70% usage
+        }
       case 'network':
-        return value > 1.0 ? 'text-green-500' : 'text-yellow-500';
+        if (value < 0.5) {
+          return 'text-red-500'; // Poor: < 0.5 Gbps
+        } else if (value < 1.0) {
+          return 'text-yellow-500'; // Okay: 0.5-1.0 Gbps
+        } else {
+          return 'text-green-500'; // Good: > 1.0 Gbps
+        }
       case 'uptime':
-        return 'text-green-500';
+        return 'text';
       default:
         return 'text-muted-foreground';
     }
   };
 
   const statusItems = [
-    {
-      title: 'System Status',
-      icon: Activity,
-      status: systemStats.systemStatus,
-      color: getStatusColor('system', 0),
-    },
     {
       title: 'Storage',
       icon: Database,
