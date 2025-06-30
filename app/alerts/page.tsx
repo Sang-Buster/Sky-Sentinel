@@ -27,8 +27,11 @@ import {
   Settings,
   Bird,
   HelpCircle,
+  CheckCheck,
 } from 'lucide-react';
-const Drone = () => <img src="/drone.svg" alt="Drone icon" />;
+const Drone = (props: React.HTMLAttributes<HTMLImageElement>) => (
+  <img src="/drone.svg" alt="Drone icon" {...props} />
+);
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAutoHideHeader } from '@/hooks/use-auto-hide-header';
 
@@ -221,6 +224,11 @@ export default function AlertsPanel() {
     );
   };
 
+  // New function to mark all alerts as resolved
+  const markAllAsResolved = () => {
+    setAlerts((prev) => prev.map((alert) => ({ ...alert, resolved: true, acknowledged: true })));
+  };
+
   // Calculate alert counts
   const activeAlerts = alerts.filter((alert) => !alert.resolved);
   const resolvedAlerts = alerts.filter((alert) => alert.resolved);
@@ -295,6 +303,18 @@ export default function AlertsPanel() {
           </Badge>
         </div>
         <div className="ml-auto flex items-center gap-4">
+          {activeAlerts.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={markAllAsResolved}
+              className="flex items-center gap-2"
+            >
+              <CheckCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Mark All As Resolved</span>
+              <span className="sm:hidden">Resolve All</span>
+            </Button>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:inline">Notifications</span>
             <Switch checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />

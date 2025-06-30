@@ -230,9 +230,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton className="flex items-center gap-2">
                     <item.icon className="h-4 w-4 shrink-0" />
-                    <span className="flex-1 truncate text-sm">
-                      {item.title}
-                    </span>
+                    <span className="flex-1 truncate text-sm">{item.title}</span>
                     <span className={`text-xs ${item.color}`}>{item.value}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
