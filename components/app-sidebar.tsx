@@ -181,11 +181,12 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-border/40 p-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Camera className="h-4 w-4 text-primary-foreground" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/favicon.svg" alt="Sky Sentinel Logo" className="h-8 w-8" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">NVR System</span>
-            <span className="text-xs text-muted-foreground">Surveillance Hub</span>
+            <span className="text-sm font-semibold">Sky Sentinel</span>
+            <span className="text-xs text-muted-foreground">NVR Surveillance System</span>
           </div>
         </div>
       </SidebarHeader>

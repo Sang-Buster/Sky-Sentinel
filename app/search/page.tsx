@@ -16,6 +16,7 @@ import {
   Sparkles,
   Bird,
   HelpCircle,
+  Drone,
 } from 'lucide-react';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAutoHideHeader } from '@/hooks/use-auto-hide-header';
@@ -155,7 +156,7 @@ export default function AISearch() {
       case 'aircraft':
         return <Plane className="h-4 w-4" />;
       case 'drone':
-        return <Activity className="h-4 w-4" />;
+        return <Drone className="h-4 w-4" />;
       case 'bird':
         return <Bird className="h-4 w-4" />;
       case 'unknown':
@@ -235,6 +236,7 @@ export default function AISearch() {
                           <CardContent className="p-4">
                             <div className="flex gap-4">
                               <div className="relative">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={result.thumbnail || '/placeholder.svg'}
                                   alt={result.filename}

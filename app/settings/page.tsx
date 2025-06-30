@@ -423,8 +423,9 @@ export default function SystemSettings() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Remove Camera</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to remove "{camera.name}"? This action cannot
-                                be undone and will remove all associated recordings and settings.
+                                Are you sure you want to remove &quot;{camera.name}&quot;? This
+                                action cannot be undone and will remove all associated recordings
+                                and settings.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

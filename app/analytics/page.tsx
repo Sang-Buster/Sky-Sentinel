@@ -180,7 +180,7 @@ const mockWeatherData: WeatherData = {
 
 export default function AnalyticsHub() {
   const [aircraftData, setAircraftData] = useState<AircraftData[]>(mockAircraftData);
-  const [weatherData, setWeatherData] = useState<WeatherData>(mockWeatherData);
+  const [weatherData] = useState<WeatherData>(mockWeatherData);
   const [selectedAircraft, setSelectedAircraft] = useState<string | null>(null);
   const [selectedCameraFilter, setSelectedCameraFilter] = useState<string>('all');
   const isHeaderVisible = useAutoHideHeader();

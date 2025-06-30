@@ -28,10 +28,9 @@ import {
   Bird,
   HelpCircle,
   CheckCheck,
+  Drone,
 } from 'lucide-react';
-const Drone = (props: React.HTMLAttributes<HTMLImageElement>) => (
-  <img src="/drone.svg" alt="Drone icon" {...props} />
-);
+
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAutoHideHeader } from '@/hooks/use-auto-hide-header';
 
@@ -149,66 +148,6 @@ export default function AlertsPanel() {
 
     return () => clearInterval(interval);
   }, []);
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'bg-red-500';
-      case 'high':
-        return 'bg-orange-500';
-      case 'medium':
-        return 'bg-yellow-500';
-      case 'low':
-        return 'bg-blue-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getSeverityTextColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'text-red-500 border-red-500';
-      case 'high':
-        return 'text-orange-500 border-orange-500';
-      case 'medium':
-        return 'text-yellow-500 border-yellow-500';
-      case 'low':
-        return 'text-blue-500 border-blue-500';
-      default:
-        return 'text-gray-500 border-gray-500';
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'detection':
-        return <Eye className="h-4 w-4" />;
-      case 'system':
-        return <Settings className="h-4 w-4" />;
-      case 'security':
-        return <AlertTriangle className="h-4 w-4" />;
-      case 'weather':
-        return <Activity className="h-4 w-4" />;
-      default:
-        return <Bell className="h-4 w-4" />;
-    }
-  };
-
-  const getDetectionIcon = (type?: string) => {
-    switch (type) {
-      case 'aircraft':
-        return <Plane className="h-4 w-4" />;
-      case 'drone':
-        return <Drone className="h-4 w-4" />;
-      case 'bird':
-        return <Bird className="h-4 w-4" />;
-      case 'unknown':
-        return <HelpCircle className="h-4 w-4" />;
-      default:
-        return <Activity className="h-4 w-4" />;
-    }
-  };
 
   const acknowledgeAlert = (alertId: string) => {
     setAlerts((prev) =>

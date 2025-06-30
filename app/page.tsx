@@ -19,8 +19,8 @@ import {
   Bird,
   HelpCircle,
   Clock,
+  Drone,
 } from 'lucide-react';
-const Drone = () => <img src="/drone.svg" alt="Drone icon" />;
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { useCameraStore } from '@/lib/camera-store';
@@ -104,7 +104,6 @@ const mockDetections: Detection[] = [
 export default function Dashboard() {
   const { cameras } = useCameraStore();
   const [recentDetections, setRecentDetections] = useState<Detection[]>(mockDetections);
-  const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -164,27 +163,11 @@ export default function Dashboard() {
     }
   };
 
-  const getDetectionColor = (type: string) => {
-    switch (type) {
-      case 'aircraft':
-        return 'bg-blue-500';
-      case 'drone':
-        return 'bg-red-500';
-      case 'bird':
-        return 'bg-green-500';
-      case 'unknown':
-        return 'bg-gray-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
   const togglePlayback = (cameraId: string) => {
     setIsPlaying((prev) => ({ ...prev, [cameraId]: !prev[cameraId] }));
   };
 
   const handleFullscreen = (cameraId: string) => {
-    setSelectedCamera(cameraId);
     console.log(`Opening fullscreen view for camera ${cameraId}`);
   };
 

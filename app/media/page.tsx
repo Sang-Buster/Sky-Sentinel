@@ -24,8 +24,8 @@ import {
   Bird,
   HelpCircle,
   Loader2,
+  Drone,
 } from 'lucide-react';
-const Drone = () => <img src="/drone.svg" alt="Drone icon" />;
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAutoHideHeader } from '@/hooks/use-auto-hide-header';
 
@@ -192,36 +192,6 @@ export default function MediaLibrary() {
         return 0;
     }
   });
-
-  const getDetectionIcon = (type: string) => {
-    switch (type) {
-      case 'aircraft':
-        return <Plane className="h-4 w-4" />;
-      case 'drone':
-        return <Drone className="h-4 w-4" />;
-      case 'bird':
-        return <Bird className="h-4 w-4" />;
-      case 'unknown':
-        return <HelpCircle className="h-4 w-4" />;
-      default:
-        return <HelpCircle className="h-4 w-4" />;
-    }
-  };
-
-  const getDetectionColor = (type: string) => {
-    switch (type) {
-      case 'aircraft':
-        return 'bg-blue-500 hover:bg-blue-600';
-      case 'drone':
-        return 'bg-red-500 hover:bg-red-600';
-      case 'bird':
-        return 'bg-green-500 hover:bg-green-600';
-      case 'unknown':
-        return 'bg-gray-500 hover:bg-gray-600';
-      default:
-        return 'bg-gray-500 hover:bg-gray-600';
-    }
-  };
 
   const videoItems = sortedItems.filter((item) => item.type === 'video');
   const imageItems = sortedItems.filter((item) => item.type === 'image');
@@ -424,6 +394,7 @@ function MediaCard({ item }: { item: MediaItem }) {
   return (
     <Card className="overflow-hidden border-border/50 hover:shadow-lg transition-all duration-200 hover:border-border/70">
       <div className="relative aspect-video">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.thumbnail || '/placeholder.svg'}
           alt={item.filename}

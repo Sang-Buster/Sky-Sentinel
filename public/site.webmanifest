@@ -1,0 +1,21 @@
+{
+  "name": "Sky-Sentinel | NVR Surveillance System",
+  "short_name": "Sky-Sentinel",
+  "description": "Advanced Network Video Recorder with AI-powered analytics",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+} 
